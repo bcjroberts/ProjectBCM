@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class FloorLayoutData {
 
 	public char[,] floorData;
+	public float height = 0;
 
 	public FloorLayoutData(Vector2 floorDimensions){
 		int xv = Mathf.RoundToInt(floorDimensions.x);
@@ -20,6 +21,7 @@ public class FloorLayoutData {
 		int fxv = Mathf.RoundToInt(endPos.x);
 		int iyv = Mathf.RoundToInt(startPos.y);
 		int fyv = Mathf.RoundToInt(endPos.y);
+		Debug.Log (ixv + ":" + fxv + ":" + iyv + ":" + fyv);
 		for(int x = ixv;x<fxv;x++){ 
 			for(int y = iyv;y<fyv;y++){
 				floorData[x,y] = value;
@@ -45,5 +47,12 @@ public class FloorLayoutData {
 			data += "\n";
 		}
 		Debug.Log(data);
+	}
+	public int getDimention(int d){
+		if (d == 0) {
+			return floorData.GetLength(0);
+		} else {
+			return floorData.GetLength(1);
+		}
 	}
 }
