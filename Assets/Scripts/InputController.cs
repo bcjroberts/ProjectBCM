@@ -31,5 +31,15 @@ public class InputController : MonoBehaviour {
 		Vector3 rotation = new Vector3(0,yRot,0)*rotationSpeed;
 		
 		myMotor.rotate(rotation);
+		
+		//Gets the input and makes the camera rotate up and down. Limits rotation as well.
+		transform.GetChild(0).Rotate(Vector3.left*Input.GetAxis("Mouse Y")*rotationSpeed);
+		
+		//Limit Camera viewing angles
+		if(transform.GetChild(0).eulerAngles.x<300 && transform.GetChild(0).eulerAngles.x>260){
+			transform.GetChild(0).eulerAngles = new Vector3(300,transform.GetChild(0).eulerAngles.y,transform.GetChild(0).eulerAngles.z);
+		}else if(transform.GetChild(0).eulerAngles.x>60 && transform.GetChild(0).eulerAngles.x<100){
+			transform.GetChild(0).eulerAngles = new Vector3(60,transform.GetChild(0).eulerAngles.y,transform.GetChild(0).eulerAngles.z);
+		}
 	}
 }
