@@ -11,6 +11,8 @@ public class InputController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		myMotor = GetComponent<PlayerMotor>();
+		Cursor.lockState = CursorLockMode.Locked;
+		Cursor.visible = false;
 	}
 	
 	// Update is called once per frame

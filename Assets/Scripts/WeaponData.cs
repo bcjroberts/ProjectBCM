@@ -9,7 +9,6 @@ public class WeaponData : MonoBehaviour {
 	public bool tcanSwitchRate;
 	public float treloadTime;
 	public float tkickbackMod;
-	public float taccuracy;
 	public float tfireRatePerMinute;
 	public AudioClip firingSoundEffect;
 	public AudioClip reloadSoundEffect;
@@ -21,7 +20,6 @@ public class WeaponData : MonoBehaviour {
 	private bool canSwitchRate;
 	private float reloadTime;
 	private float kickbackMod;
-	private float accuracy;
 	private float fireRatePerMinute;
 	//end weapon specific variables
 
@@ -43,7 +41,6 @@ public class WeaponData : MonoBehaviour {
 		canSwitchRate = tcanSwitchRate;
 		reloadTime = treloadTime;
 		kickbackMod = tkickbackMod;
-		accuracy = taccuracy;
 		fireRatePerMinute = tfireRatePerMinute;
 
 		timePerShot = 1f / (fireRatePerMinute / 60f);
@@ -115,7 +112,7 @@ public class WeaponData : MonoBehaviour {
 			}
 			//Debug.Log(weaponKickModifier);
 			Camera.main.transform.Rotate(Vector3.left*(weaponKickModifier+UnityEngine.Random.Range(-kickbackMod/2f,kickbackMod/2f)));
-			Camera.main.transform.parent.GetComponent<PlayerMotor>().rotate(Vector3.up*(weaponKickModifier+UnityEngine.Random.Range(-kickbackMod/4f,kickbackMod/4f)/2f));
+			Camera.main.transform.parent.GetComponent<PlayerMotor>().kickRotate(Vector3.up*(weaponKickModifier+UnityEngine.Random.Range(-kickbackMod/4f,kickbackMod/4f)/2f));
 			
 			//if not loaded, go through reload cycle.
 		}else if(loaded==false){

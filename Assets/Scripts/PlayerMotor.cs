@@ -19,6 +19,9 @@ public class PlayerMotor : MonoBehaviour {
 	public void rotate(Vector3 nRotation){
 		rotation = nRotation;
 	}
+	public void kickRotate(Vector3 kRotation){
+		myRigidbody.MoveRotation(myRigidbody.rotation * Quaternion.Euler(kRotation));	
+	}
 	//method for jumping
 	public void jump(float jumpForce){
 		myRigidbody.AddForce(Vector3.up*jumpForce);
