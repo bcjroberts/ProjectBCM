@@ -25,8 +25,9 @@ public class InputController : MonoBehaviour {
 		
 		Vector3 fMov = (xMov+yMov).normalized*speed;
 		
-		myMotor.setVelocity(fMov);
-		
+		if(canJump){
+			myMotor.setVelocity(fMov);
+		}
 		//Gets the input and makes the player rotate. Turns left and right.
 		float yRot = Input.GetAxisRaw("Mouse X");
 		
