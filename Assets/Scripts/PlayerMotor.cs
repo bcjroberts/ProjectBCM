@@ -11,12 +11,17 @@ public class PlayerMotor : MonoBehaviour {
 	void Start () {
 		myRigidbody = GetComponent<Rigidbody>();
 	}
-	
+	//sets the velocity for the player
 	public void setVelocity(Vector3 nVelocity){
 		myVelocity = nVelocity;
 	}
+	//sets the roation for the player
 	public void rotate(Vector3 nRotation){
 		rotation = nRotation;
+	}
+	//method for jumping
+	public void jump(float jumpForce){
+		myRigidbody.AddForce(Vector3.up*jumpForce);
 	}
 	// Update is called once per tick
 	void FixedUpdate () {

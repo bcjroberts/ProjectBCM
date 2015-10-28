@@ -25,7 +25,6 @@ public class WeaponData : MonoBehaviour {
 	private float fireRatePerMinute;
 	//end weapon specific variables
 
-	private AudioSource myAudioSource;
 	private int currentRoundsInClip;
 	private float timePerShot;
 	private float timeSinceShot;
@@ -37,7 +36,6 @@ public class WeaponData : MonoBehaviour {
 	private float weaponKickModifier = 0;
 
 	private float timeSinceLastEffect;
-	private float effectTimer = 0.05f;
 	// Use this for initialization
 	void Start () {
 		roundsPerClip = troundsPerClip;
@@ -50,22 +48,19 @@ public class WeaponData : MonoBehaviour {
 
 		timePerShot = 1f / (fireRatePerMinute / 60f);
 		
-		Debug.Log(timePerShot);
 		currentRoundsInClip = roundsPerClip;
-		myAudioSource = GetComponent<AudioSource>();
-
 	}
 	
 	// Update is called once per frame
 	void Update () {
-
+		//Controlls switching firing modes from auto to semi if the option is available for the weapon.
 		if(Input.GetMouseButtonDown(0) && !automatic){
 			singleFireClick = true;
 		}
 		if(Input.GetKeyDown(KeyCode.F) && canSwitchRate)
 			automatic = !automatic;
 		
-		//On left click
+		//On left click, shoot. If not shooting, reset kickback
 		if (Input.GetMouseButton (0)) {
 			shooting = true;
 			//Debug.Log("Shots left in clip: " + currentRoundsInClip);
@@ -76,8 +71,8 @@ public class WeaponData : MonoBehaviour {
 				if(weaponKickModifier<0)
 					weaponKickModifier = 0;
 			}
-		}
-		if(doShootEffect && shooting==true){
+		}//Do a shoot effect if needed. //Removed && shooting==true
+		if(doShootEffect){
 			AudioSource.PlayClipAtPoint(firingSoundEffect,transform.position);
 			GameObject temp =  (GameObject)Instantiate(fireEffect,fireEffectStartPos.transform.position,fireEffectStartPos.transform.rotation);
 			temp.transform.SetParent(fireEffectStartPos.transform);
@@ -122,6 +117,7 @@ public class WeaponData : MonoBehaviour {
 			Camera.main.transform.Rotate(Vector3.left*(weaponKickModifier+UnityEngine.Random.Range(-kickbackMod/2f,kickbackMod/2f)));
 			Camera.main.transform.parent.GetComponent<PlayerMotor>().rotate(Vector3.up*(weaponKickModifier+UnityEngine.Random.Range(-kickbackMod/4f,kickbackMod/4f)/2f));
 			
+			//if not loaded, go through reload cycle.
 		}else if(loaded==false){
 			currentReloadTime+=Time.fixedDeltaTime;
 			if(currentReloadTime>=reloadTime){
