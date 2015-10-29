@@ -29,7 +29,7 @@ public class BuildingGenerator : MonoBehaviour {
 		FloorLayoutData fld = new FloorLayoutData(floorDimensions);
 		floorInformation.Add(fld);
 		fillFloorSpace(fld);
-		Vector3 instPos = findPartLocationWithInfluence(new Vector2(2,3),new Vector2(1,1),fld,'s');
+		Vector3 instPos = findPartLocationWithInfluence(new Vector2(1,3),new Vector2(1,1),fld,'s');
 		GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
 		tmp.transform.SetParent(buildingContainerObj.transform);
 		
@@ -47,7 +47,7 @@ public class BuildingGenerator : MonoBehaviour {
 			//fld.printBaseData();
 			fillFloorSpace(fld);
 			floorInformation.Add(fld);
-			Vector3 instPos = findPartLocationWithInfluence(new Vector2(2,3),new Vector2(1,1),fld,'s');
+			Vector3 instPos = findPartLocationWithInfluence(new Vector2(1,3),new Vector2(1,1),fld,'s');
 			GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
 			tmp.transform.SetParent(buildingContainerObj.transform);
 			previousLayout = fld;

@@ -105,14 +105,13 @@ public class WeaponData : MonoBehaviour {
 			doShootEffect = true;
 			singleFireClick = false;
 			//Do calculations for accuracy and modify the second argument of raycast. Actually, just use kickback. Add if necessary.
-			weaponAccuracyModifier = (weaponAccuracyModifier*weaponAccuracyModifier)+accuracyMod;
+			Vector3 bulletTrajectory = Camera.main.transform.forward+new Vector3(UnityEngine.Random.Range(-weaponAccuracyModifier,weaponAccuracyModifier),UnityEngine.Random.Range(-weaponAccuracyModifier,weaponAccuracyModifier),UnityEngine.Random.Range(-weaponAccuracyModifier,weaponAccuracyModifier));
+
+			weaponAccuracyModifier = (weaponAccuracyModifier)+accuracyMod;
 			if(weaponAccuracyModifier>0.1f){
 				weaponAccuracyModifier = 0.1f;
 			}
-			
-			
-			Vector3 bulletTrajectory = Camera.main.transform.forward+new Vector3(UnityEngine.Random.Range(-weaponAccuracyModifier,weaponAccuracyModifier),UnityEngine.Random.Range(-weaponAccuracyModifier,weaponAccuracyModifier),UnityEngine.Random.Range(-weaponAccuracyModifier,weaponAccuracyModifier));
-			
+
 			//Now we calculate the rayCast
 			if(Physics.Raycast(Camera.main.transform.position,bulletTrajectory,out hitInfo,100f)){
 				//Debug.Log(hitInfo.transform.tag);
@@ -146,7 +145,7 @@ public class WeaponData : MonoBehaviour {
 		}else{
 			timeSinceShot+=Time.fixedDeltaTime;
 		}
-		if(shooting == false){
+		if(shooting == false || loaded == false){
 			if(weaponKickModifier>0){
 				weaponKickModifier-=kickbackMod;
 				if(weaponKickModifier<0)
@@ -159,5 +158,8 @@ public class WeaponData : MonoBehaviour {
 			}
 		}
 
+	}
+	public float getAccuracyMod(){
+		return weaponAccuracyModifier;
 	}
 }
