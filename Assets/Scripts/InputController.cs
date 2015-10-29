@@ -6,7 +6,11 @@ public class InputController : MonoBehaviour {
 	private float jumpForce = 2000f;
 	private bool canJump = false;
 	private float speed = 3f;
+	private float runMod = 1.5f;
 	private float rotationSpeed = 3;
+	private float rotMod = 1;
+	private float aimingRotationMod = 1f/3f;
+	private float aimingSpeedMod = 0.5f;
 	private PlayerMotor myMotor;
 	// Use this for initialization
 	void Start () {
@@ -27,18 +31,35 @@ public class InputController : MonoBehaviour {
 		
 		Vector3 fMov = (xMov+yMov).normalized*speed;
 		
-		if(canJump){
-			myMotor.setVelocity(fMov);
-		}
+		
 		//Gets the input and makes the player rotate. Turns left and right.
 		float yRot = Input.GetAxisRaw("Mouse X");
 		
 		Vector3 rotation = new Vector3(0,yRot,0)*rotationSpeed;
 		
+		//Handles more precise aiming on right click
+		if(Input.GetMouseButton(1)){
+			Camera.main.fieldOfView = 40f;
+			rotation = rotation*aimingRotationMod;
+			rotMod = rotationSpeed*aimingRotationMod;
+			fMov = fMov*aimingSpeedMod;
+		}else{
+			rotMod = rotationSpeed;
+			Camera.main.fieldOfView = 60f;
+		}
+		//running on right shift
+		if(!Input.GetMouseButton(1) && Input.GetKey(KeyCode.LeftShift)){
+			fMov = fMov*runMod;
+		}
+		//Final set of movement here
+		if(canJump){
+			myMotor.setVelocity(fMov);
+		}
+		//Final set of rotation
 		myMotor.rotate(rotation);
 		
 		//Gets the input and makes the camera rotate up and down. Limits rotation as well.
-		transform.GetChild(0).Rotate(Vector3.left*Input.GetAxis("Mouse Y")*rotationSpeed);
+		transform.GetChild(0).Rotate(Vector3.left*Input.GetAxis("Mouse Y")*rotMod);
 		
 		//Limit Camera viewing angles
 		if(transform.GetChild(0).eulerAngles.x<300 && transform.GetChild(0).eulerAngles.x>260){

@@ -7,6 +7,7 @@ public class BuildingGenerator : MonoBehaviour {
 	//These variables are self explanitory I believe
 	public int numberOfFloors;
 	public Vector2 floorDimensions;
+	public GameObject buildingContainerObj;
 	
 	private List<FloorLayoutData> floorInformation = new List<FloorLayoutData>(); 
 	private FloorLayoutData previousLayout;
@@ -29,8 +30,8 @@ public class BuildingGenerator : MonoBehaviour {
 		floorInformation.Add(fld);
 		fillFloorSpace(fld);
 		Vector3 instPos = findPartLocationWithInfluence(new Vector2(2,3),new Vector2(1,1),fld,'s');
-		Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
-		
+		GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
+		tmp.transform.SetParent(buildingContainerObj.transform);
 		
 		previousLayout = fld;
 		constructLevel(currentLevel, 2f);
@@ -47,8 +48,8 @@ public class BuildingGenerator : MonoBehaviour {
 			fillFloorSpace(fld);
 			floorInformation.Add(fld);
 			Vector3 instPos = findPartLocationWithInfluence(new Vector2(2,3),new Vector2(1,1),fld,'s');
-			Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
-			
+			GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
+			tmp.transform.SetParent(buildingContainerObj.transform);
 			previousLayout = fld;
 			//fld.printLayoutData();
 			constructLevel(++levelNum, baseHeight+=2);
@@ -96,7 +97,8 @@ public class BuildingGenerator : MonoBehaviour {
 				//instantiate the floor tile that was just calculated
 				string name = maxDimension+"x"+maxDimension+"tile";
 				float offset = maxDimension/2f;
-				Instantiate(Resources.Load(name),new Vector3(startPos.x+offset,floor.height,startPos.y+offset),Quaternion.identity);
+				GameObject tmp = (GameObject)Instantiate(Resources.Load(name),new Vector3(startPos.x+offset,floor.height,startPos.y+offset),Quaternion.identity);
+				tmp.transform.SetParent(buildingContainerObj.transform);
 				//floor.height+=0.1f;
 				floor.fillLayoutData(startPos,maxDimension);
 			}

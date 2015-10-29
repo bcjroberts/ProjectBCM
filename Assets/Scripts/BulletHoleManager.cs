@@ -17,7 +17,7 @@ public class BulletHoleManager : MonoBehaviour {
 	public void addBulletHole(RaycastHit hitInfo){
 		GameObject b =  (GameObject)Instantiate(bulletHoles[UnityEngine.Random.Range(0,bulletHoles.Length)],hitInfo.point+hitInfo.normal*0.01f,Quaternion.FromToRotation(Vector3.back,hitInfo.normal));
 		currentHoles.AddLast(b);
-		
+		b.transform.SetParent(transform);
 		if(currentHoles.Count>maxBulletHoles){
 			GameObject bd = currentHoles.First.Value;
 			currentHoles.RemoveFirst();

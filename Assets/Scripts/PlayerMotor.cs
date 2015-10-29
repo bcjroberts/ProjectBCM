@@ -38,8 +38,10 @@ public class PlayerMotor : MonoBehaviour {
 		//Performes player movement taking collisions into account
 		if(myVelocity != Vector3.zero){
 			myRigidbody.MovePosition(myRigidbody.position + myVelocity*Time.deltaTime);
+		}else{
+			myRigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
 		}
-		//performes player rotation
-		myRigidbody.MoveRotation(myRigidbody.rotation * Quaternion.Euler(rotation));	
+		//performes player rotation	
+		myRigidbody.MoveRotation(myRigidbody.rotation * Quaternion.Euler(rotation));
 	}
 }
