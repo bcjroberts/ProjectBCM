@@ -32,7 +32,10 @@ public class FloorLayoutData {
 		floorInfluenceData = new char[xv,yv];
 		for(int j = 0;j<xv;j++){
 			for(int k = 0;k<yv;k++){
-				floorBaseData[j,k] = previousFloorData[j,k];			//takes into account previous floor elements, such as stair cases and elevators
+				if(previousFloorData[j,k]!='d')
+					floorBaseData[j,k] = previousFloorData[j,k];			//takes into account previous floor elements, such as stair cases and elevators
+				else
+					floorBaseData[j,k] = 'e';
 				floorObjectData[j,k] = previousFloorData[j,k];
 				floorInfluenceData[j,k] = 'e';
 			}
@@ -100,9 +103,9 @@ public class FloorLayoutData {
 		string data = "";
 		for(int j = 0;j<floorObjectData.GetLength(0);j++){
 			for(int k = 0;k<floorObjectData.GetLength(1);k++){
-				data += floorObjectData[j,k].ToString();
+				data = floorObjectData[j,k].ToString() + data;
 			}
-			data += "\n";
+			data = "\n" + data;
 		}
 		Debug.Log(data);
 	}
