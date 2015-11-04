@@ -270,25 +270,21 @@ public class BuildingGenerator : MonoBehaviour {
 	//Going to keep some variables for this method by this method for ease of use.
 	public void addHallways(FloorLayoutData fld){
 		
-		int avgDimension = Mathf.RoundToInt((fld.getDimention(0)+fld.getDimention(1))/2f);
-		int minStraightLength = avgDimension/5+1;
-		int maxStraightLength = avgDimension/2;
-		
 		List<Vector2> entrances = findFloorEntrances(fld);
 		bool linked = false;
 		
-		Debug.Log(entrances.Count);
+		Debug.Log("Entrances: " + entrances.Count);
 		if(entrances.Count<2)
 			return;
 		
 		int entranceIndex = 1;
-		int maxIterations = 200;
+		int maxIterations = 20;
 		int cIterations = 0;
 		Vector2 currentPos = entrances[0];
 		Vector2 currentDestination = entrances[1];
 		Vector2 prevPos = new Vector2(-1,-1);
 		List<char> validChars = new List<char>{'e','h'};
-		
+		PathFinding.findPath (currentPos, currentDestination,fld.floorObjectData);
 		while(linked==false && cIterations<maxIterations){
 			
 			//Check if go right
@@ -316,7 +312,7 @@ public class BuildingGenerator : MonoBehaviour {
 				fld.floorObjectData[Mathf.RoundToInt(currentPos.x),Mathf.RoundToInt(currentPos.y)] = 'h';
 				//Debug.Log("Going down");
 			}	
-			Debug.Log(Vector2.Distance(currentPos,currentDestination));
+
 			//check to see if we are at the destination	
 			if(Vector2.Distance(currentPos,currentDestination)<=1){
 				currentPos = currentDestination;
@@ -328,10 +324,10 @@ public class BuildingGenerator : MonoBehaviour {
 					prevPos = new Vector2(-1,-1);
 				}
 			}
-			fld.printObjectData();
+			//fld.printObjectData();
 			cIterations++;
 		}
-		Debug.Log(cIterations);
+		//Debug.Log(cIterations);
 	}
 	//Call this to find all of the ways/spots people can get onto the floor
 	public List<Vector2> findFloorEntrances(FloorLayoutData fld){
