@@ -10,14 +10,14 @@ public class PathFinding {
 		int[,] startArray = convertCharArrayToIntArray(arrayData);
 		setArrayDistances (Mathf.RoundToInt(startPos.x), Mathf.RoundToInt(startPos.y), 0, startArray);
 
-		string printinfo = "";
+		/*string printinfo = "";
 		for (int j = 0; j<startArray.GetLength(0); j++) {
 			for(int k = 0;k<startArray.GetLength(1);k++){
 				printinfo+= " "+startArray[j,k];
 			}
 			printinfo+="\n";
 		}
-		Debug.Log (printinfo);
+		Debug.Log (printinfo);*/
 
 		path.Add (endPos);
 		int cx = Mathf.RoundToInt (endPos.x);
@@ -49,10 +49,6 @@ public class PathFinding {
 				done = true;
 			}
 			cIter++;
-		}
-		Debug.Log ("Size of path: " + path.Count);
-		foreach(Vector2 v in path){
-			Debug.Log(v);
 		}
 		return path;
 	}

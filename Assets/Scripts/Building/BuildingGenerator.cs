@@ -65,7 +65,7 @@ public class BuildingGenerator : MonoBehaviour {
 		}
 		
 	}
-	//Filles all of the remaining floor space. Call this when all stairs, ladders, etc have already been added.
+	//Filles all of the remaining floor space. Call this when all stairs, ladders, rooms etc have already been added.
 	private void fillFloorSpace(FloorLayoutData floor){
 		//floor.printLayoutData();
 		bool done = false;
@@ -113,6 +113,35 @@ public class BuildingGenerator : MonoBehaviour {
 			}
 		}
 		//floor.printLayoutData();
+	}
+	//Call this to add room walls and doorways
+	private void addObjectLayerRooms(FloorLayoutData floor){
+		for (int j = 0; j<floor.floorObjectData.GetLength(0); j++) {
+			for(int k = 0;k<floor.floorObjectData.GetLength(1);k++){
+				//If the object is a hall
+				if(floor.floorObjectData[j,k]=='r'){
+					
+				}
+			}
+		}
+	}
+	//Call this method to add rooms to the structure
+	private void addRooms(FloorLayoutData floor){
+
+		bool done = false;
+		bool xmod = false;
+		int xmax = floor.floorObjectData.GetLength (0) / 2;
+		int ymax = floor.floorObjectData.GetLength (1) / 2;
+
+		while (!done) {
+			int cx = UnityEngine.Random.Range(2,xmax);
+			int cy = UnityEngine.Random.Range(2, ymax);
+			findPartLocation( new Vector2(cx,cy), new Vector2(0,0),floor,'r');
+
+
+
+		}
+
 	}
 	//gets the next empty space going through the x axis, then down a line, then through the x axis again. Returns -1,-1 if floor is full.
 	private Vector2 getNextEmptyTile(FloorLayoutData floor){
@@ -263,71 +292,37 @@ public class BuildingGenerator : MonoBehaviour {
 		return new Vector3 (pos.x+(dimensions.x/2f),fld.height+1,pos.y+(dimensions.y/2f));
 	}
 	//Call this method once stairs/other up methods have been introduced.
-	
-	
-	int minStraightLength = 3;
-	int maxStraightLength = 5;
-	//Going to keep some variables for this method by this method for ease of use.
 	public void addHallways(FloorLayoutData fld){
 		
 		List<Vector2> entrances = findFloorEntrances(fld);
-		bool linked = false;
 		
-		Debug.Log("Entrances: " + entrances.Count);
+		//Debug.Log("Entrances: " + entrances.Count);
 		if(entrances.Count<2)
 			return;
 		
 		int entranceIndex = 1;
-		int maxIterations = 20;
-		int cIterations = 0;
 		Vector2 currentPos = entrances[0];
 		Vector2 currentDestination = entrances[1];
-		Vector2 prevPos = new Vector2(-1,-1);
-		List<char> validChars = new List<char>{'e','h'};
-		PathFinding.findPath (currentPos, currentDestination,fld.floorObjectData);
-		while(linked==false && cIterations<maxIterations){
-			
-			//Check if go right
-			if(currentPos.x-currentDestination.x<0 && inBounds(fld,currentPos+new Vector2(1,0)) && validChars.Contains(fld.floorObjectData[Mathf.RoundToInt(currentPos.x+1),Mathf.RoundToInt(currentPos.y)]) && !(prevPos.x==(currentPos.x+1) && prevPos.y==currentPos.y)){
-				prevPos = currentPos;
-				currentPos+=new Vector2(1,0);
-				fld.floorObjectData[Mathf.RoundToInt(currentPos.x),Mathf.RoundToInt(currentPos.y)] = 'h';
-				//Debug.Log("Going right");
-			//Check if go left
-			}else if(currentPos.x-currentDestination.x>0 && inBounds(fld,currentPos+new Vector2(-1,0)) && validChars.Contains(fld.floorObjectData[Mathf.RoundToInt(currentPos.x-1),Mathf.RoundToInt(currentPos.y)]) && !(prevPos.x==(currentPos.x-1) && prevPos.y==currentPos.y)){
-				prevPos = currentPos;
-				currentPos+=new Vector2(-1,0);
-				fld.floorObjectData[Mathf.RoundToInt(currentPos.x),Mathf.RoundToInt(currentPos.y)] = 'h';	
-				//Debug.Log("Going left");
-			//Check if go up
-			}else if(currentPos.y-currentDestination.y>0 && inBounds(fld,currentPos+new Vector2(0,-1)) && validChars.Contains(fld.floorObjectData[Mathf.RoundToInt(currentPos.x),Mathf.RoundToInt(currentPos.y-1)]) && !(prevPos.x==currentPos.x && prevPos.y==(currentPos.y-1))){
-				prevPos = currentPos;
-				currentPos+=new Vector2(0,-1);
-				fld.floorObjectData[Mathf.RoundToInt(currentPos.x),Mathf.RoundToInt(currentPos.y)] = 'h';
-				//Debug.Log("Going up");
-			//Check if go down
-			}else if(currentPos.y-currentDestination.y<0 && inBounds(fld, currentPos+new Vector2(0,1)) && validChars.Contains(fld.floorObjectData[Mathf.RoundToInt(currentPos.x),Mathf.RoundToInt(currentPos.y+1)]) && !(prevPos.x==currentPos.x && prevPos.y==(currentPos.y+1))){
-			 	prevPos = currentPos;
-				currentPos+=new Vector2(0,1);
-				fld.floorObjectData[Mathf.RoundToInt(currentPos.x),Mathf.RoundToInt(currentPos.y)] = 'h';
-				//Debug.Log("Going down");
-			}	
 
-			//check to see if we are at the destination	
-			if(Vector2.Distance(currentPos,currentDestination)<=1){
-				currentPos = currentDestination;
-				entranceIndex++;
-				if(entranceIndex==entrances.Count){
-					linked = true;
-				}else{
-					currentDestination = entrances[entranceIndex];
-					prevPos = new Vector2(-1,-1);
+		for (int j = 1; j<entrances.Count; j++) {
+
+			List<Vector2> path = PathFinding.findPath (currentPos, currentDestination,fld.floorObjectData);
+
+			//Run through each position in path and set that position to an 'h' to represent a hall
+			foreach(Vector2 i in path){
+				int x = Mathf.RoundToInt(i.x);
+				int y = Mathf.RoundToInt(i.y);
+
+				if(!new List<char> {'d','h'}.Contains(fld.floorObjectData[x,y])){
+					fld.floorObjectData[x,y] = 'h';
 				}
 			}
-			//fld.printObjectData();
-			cIterations++;
+
+			currentPos = currentDestination;
+			entranceIndex++;
+			if(j!=entrances.Count-1)
+				currentDestination = entrances[entranceIndex];
 		}
-		//Debug.Log(cIterations);
 	}
 	//Call this to find all of the ways/spots people can get onto the floor
 	public List<Vector2> findFloorEntrances(FloorLayoutData fld){
