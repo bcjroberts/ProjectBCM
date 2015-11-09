@@ -162,12 +162,13 @@ public class BuildingGenerator : MonoBehaviour {
 		int xmax = floor.floorObjectData.GetLength (0) / 2;
 		int ymax = floor.floorObjectData.GetLength (1) / 2;
 		int modV = -1;
-		
+		List<RoomData> createdRooms = new List<RoomData> ();
+
 		while (!done) {
 			int cx = UnityEngine.Random.Range(2,xmax);
 			int cy = UnityEngine.Random.Range(2, ymax);
-			bool result = findRoomLocation(new Vector2(cx,cy),floor,Convert.ToChar(charValue));
-			
+			RoomData nData = findRoomLocation(new Vector2(cx,cy),floor,Convert.ToChar(charValue));
+			bool result = nData.created;
 			//if a room was not found, decrement the dimensions randomely and look again
 			if(result==false){
 				if(modV==-1){
@@ -197,7 +198,74 @@ public class BuildingGenerator : MonoBehaviour {
 				done = true;
 			
 		}
+		joinRooms (floor, createdRooms);
+	}
+	//Call this once all of the rooms have been added. Ensures all of the rooms can be reached.
+	private void joinRooms(FloorLayoutData fld, List<RoomData> rooms){
+		List<char> invalidChars = new List<char>{'s','h','e'};
+		//Go through each rooms and find its connections
+		for(int j = 0;j<rooms.Count;j++){
 
+			int x = Mathf.RoundToInt(rooms[j].position.x);
+			int y = Mathf.RoundToInt(rooms[j].position.y);
+			int dx = Mathf.RoundToInt(rooms[j].dimensions.x);
+			int dy = Mathf.RoundToInt(rooms[j].dimensions.y);
+			for(int k = 0;k<dx;k++){
+				for(int i = 0;k<dy;i++){
+
+					//******************************Need to change x+dx to something else
+					//Check all of the tiles surrounding the room to find which rooms border this room
+					if(k==0 && inBounds(fld,new Vector2(x-1,y))){
+						if(fld.floorObjectData[x-1,y]=='d'){
+							rooms[j].connected = true;
+						}else if(!invalidChars.Contains(fld.floorObjectData[x-1,y])){
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x-1,y],new Vector2(x,y),new Vector2(x-1,y));
+							rooms[j].addConnection(rdc);
+						}
+					}else if(k==dx-1 && inBounds(fld,new Vector2(x+dx,y))){
+						if(fld.floorObjectData[x+dx,y]=='d'){
+							rooms[j].connected = true;
+						}else if(!invalidChars.Contains(fld.floorObjectData[x+dx,y])){
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x+dx,y],new Vector2(x+dx-1,y),new Vector2(x+dx,y));
+							rooms[j].addConnection(rdc);
+						}
+					}
+					if(i==0 && inBounds(fld,new Vector2(x,y-1))){
+						if(fld.floorObjectData[x,y-1]=='d'){
+							rooms[j].connected = true;
+						}else if(!invalidChars.Contains(fld.floorObjectData[x,y-1])){
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x,y-1],new Vector2(x,y),new Vector2(x,y-1));
+							rooms[j].addConnection(rdc);
+						}
+					}else if(i==dy-1 && inBounds(fld,new Vector2(x,y+dy))){
+						if(fld.floorObjectData[x,y+dy]=='d'){
+							rooms[j].connected = true;
+						}else if(!invalidChars.Contains(fld.floorObjectData[x,y+dy])){
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x,y+dy],new Vector2(x,y+dy-1),new Vector2(x,y+dy));
+							rooms[j].addConnection(rdc);
+						}
+					}
+					y++;
+				}
+				x++;
+			}
+
+		}
+
+		bool allConnected = false;
+		while (!allConnected) {
+
+
+
+		}
+
+	}
+	private RoomData getDataWithChar(char value, FloorLayoutData fld, List<RoomData> rooms){
+		for (int j = 0; j<rooms.Count; j++) {
+			if(fld.floorObjectData[Mathf.RoundToInt(rooms[j].position.x),Mathf.RoundToInt(rooms[j].position.y)]==value)
+				return rooms[j];
+		}
+		return new RoomData ();
 	}
 	//gets the next empty space going through the x axis, then down a line, then through the x axis again. Returns -1,-1 if floor is full.
 	private Vector2 getNextEmptyTile(FloorLayoutData floor){
@@ -213,8 +281,8 @@ public class BuildingGenerator : MonoBehaviour {
 		
 		return position;
 	}
-	//method will find room for an object, and return coordinates for instantiation. Use this for object on the floor passed in
-	private bool findRoomLocation(Vector2 dimensions,FloorLayoutData fld, char value){
+	//method will find room for an object, and return a roomData based on if the method found a spot for a room.
+	private RoomData findRoomLocation(Vector2 dimensions,FloorLayoutData fld, char value){
 		
 		List<Vector2> potentialLocations = new List<Vector2> ();
 
@@ -246,13 +314,13 @@ public class BuildingGenerator : MonoBehaviour {
 			}
 		}
 		if (potentialLocations.Count == 0)
-			return false;
+			return new RoomData();
 
 		int choosePos = UnityEngine.Random.Range(0,potentialLocations.Count);
 		Vector2 pos = potentialLocations [choosePos];
 		fld.editObjectData(pos,pos+dimensions,value);
-		
-		return true;
+		RoomData nRoom = new RoomData(pos,dimensions);
+		return nRoom;
 	}
 	//method will find room for an object, and return the vector3 coordinates for instantiation. It will also set the influence layer, which will influence the next layer that is added.
 	private Vector3 findPartLocationWithInfluence(Vector2 dimensions, Vector2 buffer ,FloorLayoutData fld ,char value){
