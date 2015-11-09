@@ -16,6 +16,7 @@ public class BuildingGenerator : MonoBehaviour {
 	void Start () {
 		UnityEngine.Random.seed = 101;
 		constructBase();
+		
 	}
 	
 	// Update is called once per frame
@@ -48,7 +49,7 @@ public class BuildingGenerator : MonoBehaviour {
 			fillFloorSpace(fld);
 			floorInformation.Add(fld);
 			
-			//ensures no objects are created on the roof, and that it is empty.
+			//ensures no objects are created on the roof, and that it is empty. 
 			if(levelNum!=numberOfFloors-1){
 				Vector3 instPos = findPartLocationWithInfluence(new Vector2(1,3),new Vector2(1,1), new Vector2(0,-1), new Vector2(0,3), fld, 's', 'd');
 				GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
@@ -58,6 +59,8 @@ public class BuildingGenerator : MonoBehaviour {
 				tmp2.transform.SetParent(buildingContainerObj.transform);
 			}
 			addHallways(fld);
+			addRooms(fld);
+			instantiateRooms(fld);
 			previousLayout = fld;
 			fld.printObjectData();
 			//fld.printLayoutData();
@@ -115,12 +118,37 @@ public class BuildingGenerator : MonoBehaviour {
 		//floor.printLayoutData();
 	}
 	//Call this to add room walls and doorways
-	private void addObjectLayerRooms(FloorLayoutData floor){
+	private void instantiateRooms(FloorLayoutData floor){
+		
+		List<char> chars = new List<char>{'s','h','d','e'};
+		
 		for (int j = 0; j<floor.floorObjectData.GetLength(0); j++) {
 			for(int k = 0;k<floor.floorObjectData.GetLength(1);k++){
-				//If the object is a hall
-				if(floor.floorObjectData[j,k]=='r'){
+				
+				char currentChar = floor.floorObjectData[j,k];
+				//If the object is not a stair, hall or door
+				if(!chars.Contains(currentChar)){
+					GameObject rSegment = (GameObject)Instantiate(Resources.Load("WallSegment"),new Vector3(j+0.5f,floor.height,k+0.5f),Quaternion.identity);
+					rSegment.transform.SetParent(buildingContainerObj.transform);
+					RoomSegment cSeg = rSegment.GetComponent<RoomSegment>();
+					bool w1 = false;
+					bool w2 = false;
+					bool w3 = false;
+					bool w4 = false;
+					if(!inBounds(floor,new Vector2(j-1,k)) || floor.floorObjectData[j-1,k]==currentChar || floor.floorObjectData[j-1,k]=='d'){
+						w3 = true;
+					}
+					if(!inBounds(floor,new Vector2(j+1,k)) || floor.floorObjectData[j+1,k]==currentChar || floor.floorObjectData[j+1,k]=='d'){
+						w1 = true;
+					}
+					if(!inBounds(floor,new Vector2(j,k-1)) || floor.floorObjectData[j,k-1]==currentChar || floor.floorObjectData[j,k-1]=='d'){
+						w4 = true;
+					}
+					if(!inBounds(floor,new Vector2(j,k+1)) || floor.floorObjectData[j,k+1]==currentChar || floor.floorObjectData[j,k+1]=='d'){
+						w2 = true;
+					}
 					
+					cSeg.setupSegments(w1,w2,w3,w4);
 				}
 			}
 		}
@@ -129,17 +157,45 @@ public class BuildingGenerator : MonoBehaviour {
 	private void addRooms(FloorLayoutData floor){
 
 		bool done = false;
-		bool xmod = false;
+		bool resetMod = false;
+		int charValue = 65;
 		int xmax = floor.floorObjectData.GetLength (0) / 2;
 		int ymax = floor.floorObjectData.GetLength (1) / 2;
-
+		int modV = -1;
+		
 		while (!done) {
 			int cx = UnityEngine.Random.Range(2,xmax);
 			int cy = UnityEngine.Random.Range(2, ymax);
-			findPartLocation( new Vector2(cx,cy), new Vector2(0,0),floor,'r');
-
-
-
+			bool result = findRoomLocation(new Vector2(cx,cy),floor,Convert.ToChar(charValue));
+			
+			//if a room was not found, decrement the dimensions randomely and look again
+			if(result==false){
+				if(modV==-1){
+					modV = UnityEngine.Random.Range(0,2);
+					resetMod = false;
+				}else if(modV==1){
+					modV = 0;
+					resetMod = true;
+				}else{
+					modV = 1;
+					resetMod = true;
+				}
+				switch(modV){
+				case 1:
+					xmax--;
+					break;
+				case 0:
+					ymax--;
+					break;
+				}	
+				if(resetMod==true)
+					modV = -1;
+			}else{
+				charValue++;
+			}
+			if(xmax<2 || ymax <2)
+				done = true;
+			
 		}
 
 	}
@@ -158,18 +214,18 @@ public class BuildingGenerator : MonoBehaviour {
 		return position;
 	}
 	//method will find room for an object, and return coordinates for instantiation. Use this for object on the floor passed in
-	private Vector3 findPartLocation(Vector2 dimensions, Vector2 buffer ,FloorLayoutData fld ,char value){
+	private bool findRoomLocation(Vector2 dimensions,FloorLayoutData fld, char value){
 		
 		List<Vector2> potentialLocations = new List<Vector2> ();
 
-		int r1 = fld.getDimention (0) - Mathf.RoundToInt (dimensions.x - buffer.x);
-		int r2 = fld.getDimention (1) - Mathf.RoundToInt (dimensions.y - buffer.y);
+		int r1 = fld.getDimention (0) - Mathf.RoundToInt (dimensions.x);
+		int r2 = fld.getDimention (1) - Mathf.RoundToInt (dimensions.y);
 
 		int xd = Mathf.RoundToInt (dimensions.x);
 		int yd = Mathf.RoundToInt (dimensions.y);
 
-		for (int j = Mathf.RoundToInt(buffer.x); j<=r1; j++) {
-			for(int k = Mathf.RoundToInt(buffer.y);k<=r2;k++){
+		for (int j = 0; j<=r1; j++) {
+			for(int k = 0;k<=r2;k++){
 
 				bool validPos = true;
 				//Now we can check for the area designated by the dimensions to see if we found a start position
@@ -190,12 +246,13 @@ public class BuildingGenerator : MonoBehaviour {
 			}
 		}
 		if (potentialLocations.Count == 0)
-			return new Vector3 (-1, -1, -1);
+			return false;
 
 		int choosePos = UnityEngine.Random.Range(0,potentialLocations.Count);
 		Vector2 pos = potentialLocations [choosePos];
-		fld.editBaseData(pos,pos+dimensions,value);
-		return new Vector3 (pos.x+(dimensions.x/2f),fld.height,pos.y+(dimensions.y/2f));
+		fld.editObjectData(pos,pos+dimensions,value);
+		
+		return true;
 	}
 	//method will find room for an object, and return the vector3 coordinates for instantiation. It will also set the influence layer, which will influence the next layer that is added.
 	private Vector3 findPartLocationWithInfluence(Vector2 dimensions, Vector2 buffer ,FloorLayoutData fld ,char value){

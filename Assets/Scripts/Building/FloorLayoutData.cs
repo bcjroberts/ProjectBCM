@@ -66,6 +66,22 @@ public class FloorLayoutData {
 			}
 		}
 	}
+	public void editObjectDataRing(Vector2 startPos, Vector2 endPos, char value1, char value2){
+		int ixv = Mathf.RoundToInt(startPos.x);
+		int fxv = Mathf.RoundToInt(endPos.x);
+		int iyv = Mathf.RoundToInt(startPos.y);
+		int fyv = Mathf.RoundToInt(endPos.y);
+		//Debug.Log (ixv + ":" + fxv + ":" + iyv + ":" + fyv);
+		for(int x = ixv;x<fxv;x++){ 
+			for(int y = iyv;y<fyv;y++){
+				if(x==ixv || x==fxv-1 || y == iyv || y==fyv-1){
+					floorObjectData[x,y] = value2;
+				}else
+					floorObjectData[x,y] = value1;
+			}
+		}
+	
+	}
 	//Call this to edit the floor influence data. Used for things that will effect other floors above them. I.E. Stairs, elevators, etc.
 	public void editInfluenceData(Vector2 startPos, Vector2 endPos, char value){
 		int ixv = Mathf.RoundToInt(startPos.x);
@@ -103,9 +119,9 @@ public class FloorLayoutData {
 		string data = "";
 		for(int j = 0;j<floorObjectData.GetLength(0);j++){
 			for(int k = 0;k<floorObjectData.GetLength(1);k++){
-				data = floorObjectData[j,k].ToString() + data;
+				data += floorObjectData[j,k].ToString();
 			}
-			data = "\n" + data;
+			data += "\n";
 		}
 		Debug.Log(data);
 	}
