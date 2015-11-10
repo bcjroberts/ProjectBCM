@@ -192,6 +192,7 @@ public class BuildingGenerator : MonoBehaviour {
 				if(resetMod==true)
 					modV = -1;
 			}else{
+				createdRooms.Add(nData);
 				charValue++;
 			}
 			if(xmax<2 || ymax <2)
@@ -202,6 +203,7 @@ public class BuildingGenerator : MonoBehaviour {
 	}
 	//Call this once all of the rooms have been added. Ensures all of the rooms can be reached.
 	private void joinRooms(FloorLayoutData fld, List<RoomData> rooms){
+
 		List<char> invalidChars = new List<char>{'s','h','e'};
 		//Go through each rooms and find its connections
 		for(int j = 0;j<rooms.Count;j++){
@@ -211,22 +213,21 @@ public class BuildingGenerator : MonoBehaviour {
 			int dx = Mathf.RoundToInt(rooms[j].dimensions.x);
 			int dy = Mathf.RoundToInt(rooms[j].dimensions.y);
 			for(int k = 0;k<dx;k++){
-				for(int i = 0;k<dy;i++){
+				for(int i = 0;i<dy;i++){
 
-					//******************************Need to change x+dx to something else
 					//Check all of the tiles surrounding the room to find which rooms border this room
 					if(k==0 && inBounds(fld,new Vector2(x-1,y))){
 						if(fld.floorObjectData[x-1,y]=='d'){
 							rooms[j].connected = true;
 						}else if(!invalidChars.Contains(fld.floorObjectData[x-1,y])){
-							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x-1,y],new Vector2(x,y),new Vector2(x-1,y));
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x-1,y],fld,rooms),new Vector2(x,y),new Vector2(x-1,y));
 							rooms[j].addConnection(rdc);
 						}
-					}else if(k==dx-1 && inBounds(fld,new Vector2(x+dx,y))){
-						if(fld.floorObjectData[x+dx,y]=='d'){
+					}else if(k==dx-1 && inBounds(fld,new Vector2(x+1,y))){
+						if(fld.floorObjectData[x+1,y]=='d'){
 							rooms[j].connected = true;
-						}else if(!invalidChars.Contains(fld.floorObjectData[x+dx,y])){
-							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x+dx,y],new Vector2(x+dx-1,y),new Vector2(x+dx,y));
+						}else if(!invalidChars.Contains(fld.floorObjectData[x+1,y])){
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x+1,y],fld,rooms),new Vector2(x,y),new Vector2(x+1,y));
 							rooms[j].addConnection(rdc);
 						}
 					}
@@ -234,14 +235,14 @@ public class BuildingGenerator : MonoBehaviour {
 						if(fld.floorObjectData[x,y-1]=='d'){
 							rooms[j].connected = true;
 						}else if(!invalidChars.Contains(fld.floorObjectData[x,y-1])){
-							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x,y-1],new Vector2(x,y),new Vector2(x,y-1));
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x,y-1],fld,rooms),new Vector2(x,y),new Vector2(x,y-1));
 							rooms[j].addConnection(rdc);
 						}
-					}else if(i==dy-1 && inBounds(fld,new Vector2(x,y+dy))){
-						if(fld.floorObjectData[x,y+dy]=='d'){
+					}else if(i==dy-1 && inBounds(fld,new Vector2(x,y+1))){
+						if(fld.floorObjectData[x,y+1]=='d'){
 							rooms[j].connected = true;
-						}else if(!invalidChars.Contains(fld.floorObjectData[x,y+dy])){
-							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x,y+dy],new Vector2(x,y+dy-1),new Vector2(x,y+dy));
+						}else if(!invalidChars.Contains(fld.floorObjectData[x,y+1])){
+							RoomDataConnection rdc = new RoomDataConnection(getDataWithChar(fld.floorObjectData[x,y+1],fld,rooms),new Vector2(x,y),new Vector2(x,y+1));
 							rooms[j].addConnection(rdc);
 						}
 					}
@@ -252,13 +253,51 @@ public class BuildingGenerator : MonoBehaviour {
 
 		}
 
+		List<RoomData> notConnected = new List<RoomData> (rooms);
+		List<RoomData> checkNext = new List<RoomData> ();
+		List<RoomDataConnection> specialCases = new List<RoomDataConnection> ();
 		bool allConnected = false;
-		while (!allConnected) {
-
-
-
+		if (notConnected.Count > 0) {
+			checkNext.Add (notConnected [0]);
+			allConnected = true;
 		}
+		int maxIter = 15;
+		int cIter = 0;
 
+		while (!allConnected && cIter<=maxIter) {
+			
+			if(checkNext.Count>0){
+				for(int j = 0;j<checkNext.Count;j++){
+					//check to see if the current room has connections that need to be added
+					for(int l = 0;l<checkNext[j].roomConnections.Count;l++){
+						if(!checkNext[j].roomConnections[l].roomData.connected && 
+						   !checkNext.Contains(checkNext[j].roomConnections[l].roomData)){
+
+						}
+					}
+
+					//Check if the current room is connected. If it is, remove it from the array
+					if(checkNext[j].connected){
+						notConnected.Remove(checkNext[j]);
+						checkNext.RemoveAt(j);
+					}else{//If not connected, check to see if any of the connections are connected.
+						for(int k = 0;k<checkNext[j].roomConnections.Count;k++){
+							if(checkNext[j].roomConnections[k].roomData.connected){
+								specialCases.Add(checkNext[j].roomConnections[k]);
+								notConnected.Remove(checkNext[j]);
+								checkNext.RemoveAt(j);
+								break;
+							}
+						}
+					}
+
+
+				}
+			}else
+				allConnected = false;
+			cIter++;
+		}
+		Debug.Log (specialCases.Count);
 	}
 	private RoomData getDataWithChar(char value, FloorLayoutData fld, List<RoomData> rooms){
 		for (int j = 0; j<rooms.Count; j++) {
