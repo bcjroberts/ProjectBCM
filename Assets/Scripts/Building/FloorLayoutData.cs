@@ -6,6 +6,7 @@ public class FloorLayoutData {
 	public char[,] floorBaseData;
 	public char[,] floorObjectData;
 	public char[,] floorInfluenceData;
+	private RoomSegment[,] roomSegments;
 	public float height = 0;
 	
 	//Called if the base
@@ -15,6 +16,7 @@ public class FloorLayoutData {
 		floorBaseData = new char[xv,yv];
 		floorObjectData = new char[xv,yv];
 		floorInfluenceData = new char[xv,yv];
+		roomSegments = new RoomSegment[xv,yv];
 		for(int j = 0;j<xv;j++){
 			for(int k = 0;k<yv;k++){
 				floorBaseData[j,k] = 'e';							 //e means empty
@@ -30,6 +32,7 @@ public class FloorLayoutData {
 		floorBaseData = new char[xv,yv];
 		floorObjectData = new char[xv,yv];
 		floorInfluenceData = new char[xv,yv];
+		roomSegments = new RoomSegment[xv,yv];
 		for(int j = 0;j<xv;j++){
 			for(int k = 0;k<yv;k++){
 				if(previousFloorData[j,k]!='d')
@@ -105,6 +108,9 @@ public class FloorLayoutData {
 			}
 		}
 	}
+	public void addRoomSegment(RoomSegment nSeg, int j, int k){
+		roomSegments[j,k] = nSeg;
+	}
 	public void printBaseData(){
 		string data = "";
 		for(int j = 0;j<floorBaseData.GetLength(0);j++){
@@ -141,5 +147,8 @@ public class FloorLayoutData {
 		} else {
 			return floorBaseData.GetLength(1);
 		}
+	}
+	public RoomSegment getRoomSegment(int j, int k){
+		return roomSegments[j,k];
 	}
 }

@@ -10,6 +10,7 @@ public class BuildingGenerator : MonoBehaviour {
 	public GameObject buildingContainerObj;
 	
 	private List<FloorLayoutData> floorInformation = new List<FloorLayoutData>(); 
+	private List<RoomDataConnection> specialCases = new List<RoomDataConnection> ();
 	private FloorLayoutData previousLayout;
 	private int currentLevel = 0;
 	// Use this for initialization 
@@ -121,7 +122,7 @@ public class BuildingGenerator : MonoBehaviour {
 	private void instantiateRooms(FloorLayoutData floor){
 		
 		List<char> chars = new List<char>{'s','h','d','e'};
-		
+		Debug.Log("Called");
 		for (int j = 0; j<floor.floorObjectData.GetLength(0); j++) {
 			for(int k = 0;k<floor.floorObjectData.GetLength(1);k++){
 				
@@ -149,8 +150,36 @@ public class BuildingGenerator : MonoBehaviour {
 					}
 					
 					cSeg.setupSegments(w1,w2,w3,w4);
+					floor.addRoomSegment(cSeg, j, k);
 				}
 			}
+		}
+		
+		foreach(RoomDataConnection rdc in specialCases){
+			int xdif = Mathf.RoundToInt(rdc.inRoom.x-rdc.outRoom.x); 
+			int ydif = Mathf.RoundToInt(rdc.inRoom.y-rdc.outRoom.y);
+			RoomSegment cSeg1 = floor.getRoomSegment(Mathf.RoundToInt(rdc.inRoom.x),Mathf.RoundToInt(rdc.inRoom.y));
+			RoomSegment cSeg2 = floor.getRoomSegment(Mathf.RoundToInt(rdc.outRoom.x),Mathf.RoundToInt(rdc.outRoom.y));
+			if(xdif!=0){
+				if(xdif<0){//Right
+					cSeg1.setupSegments(true,false,false,false);	
+					cSeg2.setupSegments(false,false,true,false);
+				}else{//Left
+					cSeg1.setupSegments(false,false,true,false);
+					cSeg2.setupSegments(true,false,false,false);
+				}
+			}else if(ydif!=0){
+				if(ydif<0){//down
+					cSeg1.setupSegments(false,true,false,false);
+					cSeg2.setupSegments(false,false,false,true);		
+				}else{//up
+					cSeg1.setupSegments(false,false,false,true);
+					cSeg2.setupSegments(false,true,false,false);
+				}
+			}else{
+				Debug.Log("The current room data connection goes nowhere.");
+			}
+		
 		}
 	}
 	//Call this method to add rooms to the structure
@@ -208,10 +237,13 @@ public class BuildingGenerator : MonoBehaviour {
 		//Go through each rooms and find its connections
 		for(int j = 0;j<rooms.Count;j++){
 
-			int x = Mathf.RoundToInt(rooms[j].position.x);
-			int y = Mathf.RoundToInt(rooms[j].position.y);
+			int ix = Mathf.RoundToInt(rooms[j].position.x);
+			int iy = Mathf.RoundToInt(rooms[j].position.y);
 			int dx = Mathf.RoundToInt(rooms[j].dimensions.x);
 			int dy = Mathf.RoundToInt(rooms[j].dimensions.y);
+			//initial values
+			int x = ix;
+			int y = iy;
 			for(int k = 0;k<dx;k++){
 				for(int i = 0;i<dy;i++){
 
@@ -248,53 +280,75 @@ public class BuildingGenerator : MonoBehaviour {
 					}
 					y++;
 				}
+				y = iy;
 				x++;
 			}
 
 		}
-
+		//Used for printing information about each room
+		/*for(int j = 0;j<rooms.Count;j++){
+			
+			Debug.Log(fld.floorObjectData[Mathf.RoundToInt(rooms[j].position.x),Mathf.RoundToInt(rooms[j].position.y)] + ": Connected: " + rooms[j].connected + " Connections: " + rooms[j].roomConnections.Count);
+			/*for(int k = 0;k<rooms[j].roomConnections.Count;k++){
+				Debug.Log(fld.floorObjectData[Mathf.RoundToInt(rooms[j].roomConnections[k].roomData.position.x),Mathf.RoundToInt(rooms[j].roomConnections[k].roomData.position.y)]);
+			}
+		}*/
+	
+		
 		List<RoomData> notConnected = new List<RoomData> (rooms);
 		List<RoomData> checkNext = new List<RoomData> ();
-		List<RoomDataConnection> specialCases = new List<RoomDataConnection> ();
+		specialCases = new List<RoomDataConnection> ();
 		bool allConnected = false;
 		if (notConnected.Count > 0) {
-			checkNext.Add (notConnected [0]);
+			for(int j = 0;j<notConnected.Count; j++){
+				if(notConnected[j].connected==true){
+					checkNext.Add(notConnected[j]);
+					notConnected.RemoveAt(j);
+					j--;
+				}
+			}
+		}else{
 			allConnected = true;
 		}
-		int maxIter = 15;
+		int maxIter = 10;
 		int cIter = 0;
-
+		//allConnected = true;
+		
+		//Attempts to connect all of the rooms to eachother
 		while (!allConnected && cIter<=maxIter) {
 			
 			if(checkNext.Count>0){
+				List<RoomData> tempData = new List<RoomData>();
 				for(int j = 0;j<checkNext.Count;j++){
 					//check to see if the current room has connections that need to be added
 					for(int l = 0;l<checkNext[j].roomConnections.Count;l++){
 						if(!checkNext[j].roomConnections[l].roomData.connected && 
 						   !checkNext.Contains(checkNext[j].roomConnections[l].roomData)){
-
+							checkNext.Add(checkNext[j].roomConnections[l].roomData);
 						}
 					}
-
 					//Check if the current room is connected. If it is, remove it from the array
 					if(checkNext[j].connected){
 						notConnected.Remove(checkNext[j]);
-						checkNext.RemoveAt(j);
+						tempData.Add(checkNext[j]);
 					}else{//If not connected, check to see if any of the connections are connected.
 						for(int k = 0;k<checkNext[j].roomConnections.Count;k++){
 							if(checkNext[j].roomConnections[k].roomData.connected){
 								specialCases.Add(checkNext[j].roomConnections[k]);
+								checkNext[j].connected = true;
 								notConnected.Remove(checkNext[j]);
-								checkNext.RemoveAt(j);
+								tempData.Add(checkNext[j]);
 								break;
 							}
 						}
 					}
-
-
+				}
+				//remove from checknext here to ensure the loop is not messed up.
+				foreach(RoomData d in tempData){
+					checkNext.Remove(d);
 				}
 			}else
-				allConnected = false;
+				allConnected = true;
 			cIter++;
 		}
 		Debug.Log (specialCases.Count);
