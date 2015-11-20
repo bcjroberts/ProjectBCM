@@ -348,7 +348,68 @@ public class BuildingGenerator : MonoBehaviour {
 					checkNext.Remove(d);
 				}
 			}else if(notConnected.Count>0){//Need to connect these rooms to other rooms or hallways****************************
-				
+				//Based on the algorithm for placing rooms, we know that if a room is in this list still
+				//It does not border any other rooms or doors, however it may border hallways, stairs or potentially other
+				//objects. We also know that it will be at most 1 tile away from another room or hallway. So, just pick a tile
+				//and add a door to that tile, then set this room as connected and place it in the checkNext array.
+				//Find an 'e' and replace it with a d to connect this room.
+				RoomData rd = notConnected[0];
+				notConnected.RemoveAt(0);
+
+				int ix = Mathf.RoundToInt(rd.position.x);
+				int iy = Mathf.RoundToInt(rd.position.y);
+				int dx = Mathf.RoundToInt(rd.dimensions.x);
+				int dy = Mathf.RoundToInt(rd.dimensions.y);
+				//initial values
+				int x = ix;
+				int y = iy;
+
+				List<char> invalidChars2 = new List<char>{'s','e'};
+				List<char> validChars2 = new List<char>{'h','e'};
+				bool foundConnection = false;
+				for(int k = 0;k<dx;k++){
+					for(int i = 0;i<dy;i++){
+						
+						//Check all of the tiles surrounding the room to find which rooms border this room
+						if(k==0 && inBounds(fld,new Vector2(x-2,y)) && !invalidChars2.Contains(fld.floorObjectData[x-2,y])){
+							if(validChars2.Contains(fld.floorObjectData[x-1,y])){
+								rd.connected = true;
+								foundConnection = true;
+								fld.floorObjectData[x-1,y] = 'd';
+								break;
+							}
+						}else if(k==dx-1 && inBounds(fld,new Vector2(x+2,y)) && !invalidChars2.Contains(fld.floorObjectData[x+2,y])){
+							if(validChars2.Contains(fld.floorObjectData[x+1,y])){
+								rd.connected = true;
+								foundConnection = true;
+								fld.floorObjectData[x+1,y] = 'd';
+								break;
+							}
+						}
+						if(i==0 && inBounds(fld,new Vector2(x,y-2)) && !invalidChars2.Contains(fld.floorObjectData[x,y-2])){
+							if(validChars2.Contains(fld.floorObjectData[x,y-1])){
+								rd.connected = true;
+								foundConnection = true;
+								fld.floorObjectData[x,y-1] = 'd';
+								break;
+							}
+						}else if(i==dy-1 && inBounds(fld,new Vector2(x,y+2)) && !invalidChars2.Contains(fld.floorObjectData[x,y+2])){
+							if(validChars2.Contains(fld.floorObjectData[x,y+1])){
+								rd.connected = true;
+								foundConnection = true;
+								fld.floorObjectData[x,y+1] = 'd';
+								break;
+							}
+						}
+						y++;
+					}
+					if(foundConnection)
+						break;
+					y = iy;
+					x++;
+				}
+				if(foundConnection)
+					checkNext.Add(rd);
 			}else{
 				allConnected = true;
 			}
