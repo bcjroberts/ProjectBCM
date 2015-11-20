@@ -23,7 +23,7 @@ public class RoomSegment : MonoBehaviour {
 			Destroy(Asegments[1]);
 			Asegments[1] = null;
 		}
-		if(removeWall3 && Asegments[3]!=null){
+		if(removeWall3 && Asegments[2]!=null){
 			Destroy(Asegments[2]);
 			Asegments[2] = null;
 		}

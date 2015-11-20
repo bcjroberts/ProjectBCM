@@ -310,12 +310,12 @@ public class BuildingGenerator : MonoBehaviour {
 		}else{
 			allConnected = true;
 		}
-		int maxIter = 10;
+		int maxIter = 100;
 		int cIter = 0;
 		//allConnected = true;
 		
 		//Attempts to connect all of the rooms to eachother
-		while (!allConnected && cIter<=maxIter) {
+		while (!allConnected && cIter<maxIter) {
 			
 			if(checkNext.Count>0){
 				List<RoomData> tempData = new List<RoomData>();
@@ -347,12 +347,18 @@ public class BuildingGenerator : MonoBehaviour {
 				foreach(RoomData d in tempData){
 					checkNext.Remove(d);
 				}
-			}else
+			}else if(notConnected.Count>0){//Need to connect these rooms to other rooms or hallways****************************
+				
+			}else{
 				allConnected = true;
+			}
 			cIter++;
 		}
-		Debug.Log (specialCases.Count);
+		if(cIter==maxIter)
+			Debug.Log("WARNING: REACHED MAXIMUM ITERATIONS!!!");
+		//Debug.Log (specialCases.Count);
 	}
+	//returna roomData with the same character that is passed in
 	private RoomData getDataWithChar(char value, FloorLayoutData fld, List<RoomData> rooms){
 		for (int j = 0; j<rooms.Count; j++) {
 			if(fld.floorObjectData[Mathf.RoundToInt(rooms[j].position.x),Mathf.RoundToInt(rooms[j].position.y)]==value)
