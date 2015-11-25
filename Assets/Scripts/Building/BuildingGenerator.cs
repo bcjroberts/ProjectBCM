@@ -63,9 +63,12 @@ public class BuildingGenerator : MonoBehaviour {
 			addRooms(fld);
 			instantiateRooms(fld);
 			previousLayout = fld;
-			fld.printObjectData();
+			//fld.printObjectData();
 			//fld.printLayoutData();
 			constructLevel(++levelNum, baseHeight+=2);
+		}else{//Now make the outside of the building
+			for(int j = 0;j<=levelNum;j++)
+				addOuterWalls(floorDimensions, j);
 		}
 		
 	}
@@ -122,7 +125,7 @@ public class BuildingGenerator : MonoBehaviour {
 	private void instantiateRooms(FloorLayoutData floor){
 		
 		List<char> chars = new List<char>{'s','h','d','e'};
-		Debug.Log("Called");
+		//Debug.Log("Called");
 		for (int j = 0; j<floor.floorObjectData.GetLength(0); j++) {
 			for(int k = 0;k<floor.floorObjectData.GetLength(1);k++){
 				
@@ -622,6 +625,43 @@ public class BuildingGenerator : MonoBehaviour {
 			}
 		}
 		return locations;
+	}
+	//Adds the outer walls of the buildig. This includes Windows and such.
+	public void addOuterWalls(Vector2 floorDimensions, float height){
+		int x = Mathf.RoundToInt(floorDimensions.x);
+		int y = Mathf.RoundToInt(floorDimensions.y);
+		height *= 2;
+		int wallCount = 0;
+		for(int j = 0;j<x;j++){
+			for(int k = 0;k<y;k++){
+				//Check for outside cases and place things accordingly
+				if(j==0){
+					if(k==0){//add corner
+						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k), Quaternion.identity);
+					}else if(k==y-1){//add corner
+						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k+1), Quaternion.identity);
+					}
+					if(wallCount>=2){
+						GameObject window = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
+						wallCount = 0;
+					}else{
+						GameObject wall = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
+						wallCount++;
+					}
+				}else if(j==x-1){
+					if(k==0){//add corner
+						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k), Quaternion.identity);
+					}else if(k==y-1){//add corner
+						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k+1), Quaternion.identity);
+					}
+				}
+				if(k==0){
+				
+				}else if(k==y-1){
+				
+				}
+			}
+		}
 	}
 	//Returns true or false based on if the given bounds are in range or not
 	public bool inBounds(FloorLayoutData fld, Vector2 bounds){
