@@ -631,34 +631,64 @@ public class BuildingGenerator : MonoBehaviour {
 		int x = Mathf.RoundToInt(floorDimensions.x);
 		int y = Mathf.RoundToInt(floorDimensions.y);
 		height *= 2;
-		int wallCount = 0;
+		int wallCount1 = 0;
+		int wallCount2 = 0;
+		int wallCount3 = 0;
+		int wallCount4 = 0;
 		for(int j = 0;j<x;j++){
 			for(int k = 0;k<y;k++){
 				//Check for outside cases and place things accordingly
+				GameObject outerPart = null;
 				if(j==0){
 					if(k==0){//add corner
-						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k), Quaternion.identity);
+						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k), Quaternion.identity);
+						outerPart.transform.parent = buildingContainerObj.transform;
 					}else if(k==y-1){//add corner
-						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k+1), Quaternion.identity);
+						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k+1), Quaternion.identity);
+						outerPart.transform.parent = buildingContainerObj.transform;
 					}
-					if(wallCount>=2){
-						GameObject window = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
-						wallCount = 0;
+					if(wallCount1>=2){
+						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
+						wallCount1 = 0;
 					}else{
-						GameObject wall = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
-						wallCount++;
+						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
+						wallCount1++;
 					}
 				}else if(j==x-1){
 					if(k==0){//add corner
-						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k), Quaternion.identity);
+						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k), Quaternion.identity);
+						outerPart.transform.parent = buildingContainerObj.transform;
 					}else if(k==y-1){//add corner
-						GameObject corner = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k+1), Quaternion.identity);
+						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k+1), Quaternion.identity);
+						outerPart.transform.parent = buildingContainerObj.transform;
+					}
+					if(wallCount2>=2){
+						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+1f,height+1,k+0.5f),new Quaternion(0,1,0,0));
+						wallCount2 = 0;
+					}else{
+						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+1f,height+1,k+0.5f),new Quaternion(0,1,0,0));
+						wallCount2++;
 					}
 				}
 				if(k==0){
-				
+					if(wallCount3>=2){
+						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
+						wallCount3 = 0;
+					}else{
+						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
+						wallCount3++;
+					}
 				}else if(k==y-1){
-				
+					if(wallCount4>=2){
+						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k+1),new Quaternion(0,0.7f,0,0.7f));
+						wallCount4 = 0;
+					}else{
+						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+0.5f,height+1,k+1),new Quaternion(0,0.7f,0,0.7f));
+						wallCount4++;
+					}
+				}
+				if(outerPart!=null){
+					outerPart.transform.parent = buildingContainerObj.transform;
 				}
 			}
 		}
