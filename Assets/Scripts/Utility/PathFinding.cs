@@ -61,7 +61,7 @@ public class PathFinding {
 			for(int k = 0;k<returnArray.GetLength(1);k++){
 				
 				//Beautiful!!!!!
-				returnArray[j,k] = new List<char>{'s'}.Contains(charArrayData[j,k]) ? -1 : returnArray.GetLength(0)*returnArray.GetLength(1);
+				returnArray[j,k] = new List<char>{'s'}.Contains(charArrayData[j,k]) ? -1 : 10000;
 			}
 		}
 		return returnArray;

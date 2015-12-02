@@ -68,7 +68,7 @@ public class BuildingGenerator : MonoBehaviour {
 			constructLevel(++levelNum, baseHeight+=2);
 		}else{//Now make the outside of the building
 			for(int j = 0;j<=levelNum;j++)
-				addOuterWalls(floorDimensions, j);
+				addOuterWalls(floorDimensions, j, false);
 		}
 		
 	}
@@ -157,7 +157,7 @@ public class BuildingGenerator : MonoBehaviour {
 				}
 			}
 		}
-		
+		Debug.Log("Number of cases: " + specialCases.Count);
 		foreach(RoomDataConnection rdc in specialCases){
 			int xdif = Mathf.RoundToInt(rdc.inRoom.x-rdc.outRoom.x); 
 			int ydif = Mathf.RoundToInt(rdc.inRoom.y-rdc.outRoom.y);
@@ -165,19 +165,27 @@ public class BuildingGenerator : MonoBehaviour {
 			RoomSegment cSeg2 = floor.getRoomSegment(Mathf.RoundToInt(rdc.outRoom.x),Mathf.RoundToInt(rdc.outRoom.y));
 			if(xdif!=0){
 				if(xdif<0){//Right
-					cSeg1.setupSegments(true,false,false,false);	
-					cSeg2.setupSegments(false,false,true,false);
+					if(cSeg1!=null)
+						cSeg1.setupSegments(true,false,false,false);
+					if(cSeg2!=null)	
+						cSeg2.setupSegments(false,false,true,false);
 				}else{//Left
-					cSeg1.setupSegments(false,false,true,false);
-					cSeg2.setupSegments(true,false,false,false);
+					if(cSeg1!=null)
+						cSeg1.setupSegments(false,false,true,false);
+					if(cSeg2!=null)
+						cSeg2.setupSegments(true,false,false,false);
 				}
 			}else if(ydif!=0){
 				if(ydif<0){//down
-					cSeg1.setupSegments(false,true,false,false);
-					cSeg2.setupSegments(false,false,false,true);		
+					if(cSeg1!=null)
+						cSeg1.setupSegments(false,true,false,false);
+					if(cSeg2!=null)
+						cSeg2.setupSegments(false,false,false,true);		
 				}else{//up
-					cSeg1.setupSegments(false,false,false,true);
-					cSeg2.setupSegments(false,true,false,false);
+					if(cSeg1!=null)
+						cSeg1.setupSegments(false,false,false,true);
+					if(cSeg2!=null)
+						cSeg2.setupSegments(false,true,false,false);
 				}
 			}else{
 				Debug.Log("The current room data connection goes nowhere.");
@@ -350,7 +358,7 @@ public class BuildingGenerator : MonoBehaviour {
 						for(int k = 0;k<checkNext[j].roomConnections.Count;k++){
 							if(checkNext[j].roomConnections[k].roomData.connected){
 								specialCases.Add(checkNext[j].roomConnections[k]);
-								checkNext[j].connected = true;
+								checkNext[j].connected = true; 
 								notConnected.Remove(checkNext[j]);
 								tempData.Add(checkNext[j]);
 								break;
@@ -362,14 +370,13 @@ public class BuildingGenerator : MonoBehaviour {
 				foreach(RoomData d in tempData){
 					checkNext.Remove(d);
 				}
-			}else if(notConnected.Count>0){//Need to connect these rooms to other rooms or hallways****************************
+			}else if(notConnected.Count>0){//Need to connect these rooms to other rooms or hallways
 				//Based on the algorithm for placing rooms, we know that if a room is in this list still
 				//It does not border any other rooms or doors, however it may border hallways, stairs or potentially other
 				//objects. We also know that it will be at most 1 tile away from another room or hallway. So, just pick a tile
 				//and add a door to that tile, then set this room as connected and place it in the checkNext array.
 				//Find an 'e' and replace it with a d to connect this room.
 				RoomData rd = notConnected[0];
-				notConnected.RemoveAt(0);
 
 				int ix = Mathf.RoundToInt(rd.position.x);
 				int iy = Mathf.RoundToInt(rd.position.y);
@@ -387,14 +394,14 @@ public class BuildingGenerator : MonoBehaviour {
 						
 						//Check all of the tiles surrounding the room to find which rooms border this room
 						if(k==0 && inBounds(fld,new Vector2(x-2,y)) && !invalidChars2.Contains(fld.floorObjectData[x-2,y])){
-							if(validChars2.Contains(fld.floorObjectData[x-1,y])){
+							if(getDataWithChar(fld.floorObjectData[x-1,y],fld,rooms).connected && validChars2.Contains(fld.floorObjectData[x-1,y])){
 								rd.connected = true;
 								foundConnection = true;
 								fld.floorObjectData[x-1,y] = 'd';
 								break;
 							}
 						}else if(k==dx-1 && inBounds(fld,new Vector2(x+2,y)) && !invalidChars2.Contains(fld.floorObjectData[x+2,y])){
-							if(validChars2.Contains(fld.floorObjectData[x+1,y])){
+							if(getDataWithChar(fld.floorObjectData[x+1,y],fld,rooms).connected && validChars2.Contains(fld.floorObjectData[x+1,y])){
 								rd.connected = true;
 								foundConnection = true;
 								fld.floorObjectData[x+1,y] = 'd';
@@ -402,14 +409,14 @@ public class BuildingGenerator : MonoBehaviour {
 							}
 						}
 						if(i==0 && inBounds(fld,new Vector2(x,y-2)) && !invalidChars2.Contains(fld.floorObjectData[x,y-2])){
-							if(validChars2.Contains(fld.floorObjectData[x,y-1])){
+							if(getDataWithChar(fld.floorObjectData[x,y-1],fld,rooms).connected && validChars2.Contains(fld.floorObjectData[x,y-1])){
 								rd.connected = true;
 								foundConnection = true;
 								fld.floorObjectData[x,y-1] = 'd';
 								break;
 							}
 						}else if(i==dy-1 && inBounds(fld,new Vector2(x,y+2)) && !invalidChars2.Contains(fld.floorObjectData[x,y+2])){
-							if(validChars2.Contains(fld.floorObjectData[x,y+1])){
+							if(getDataWithChar(fld.floorObjectData[x,y+1],fld,rooms).connected && validChars2.Contains(fld.floorObjectData[x,y+1])){
 								rd.connected = true;
 								foundConnection = true;
 								fld.floorObjectData[x,y+1] = 'd';
@@ -423,8 +430,36 @@ public class BuildingGenerator : MonoBehaviour {
 					y = iy;
 					x++;
 				}
-				if(foundConnection)
+				if(foundConnection){
 					checkNext.Add(rd);
+					notConnected.RemoveAt(0);
+				}else{//Previous algorithm did not work, so in order to connect the room we need to try something else ******************************************************************************WIP***********************************************************
+					//So, going to use the pathfinding algorithm to link this room. It will place 'h' in all 'e' slots,
+					//and if it runs into a room, it will simply add a case for into and out of the room, and if that room
+					//was not connected, it will be added to checkNext. This will ensure all rooms are connected when on a given
+					//floor, and allow for a smaller number of rooms to be added to said floor. 
+					List<Vector2> path = PathFinding.findPath(rd.position,findFloorEntrances(fld)[0],fld.floorObjectData);
+					char pValue = 'd';
+					for(int j = 1;j<path.Count;j++){
+						int cx = Mathf.RoundToInt(path[j].x);
+						int cy = Mathf.RoundToInt(path[j].y);
+						if((fld.floorObjectData[cx,cy]=='e' || fld.floorObjectData[cx,cy]=='h') && (pValue=='d' || pValue=='h')){
+							fld.floorObjectData[cx,cy]='h';
+						}else if(fld.floorObjectData[cx,cy]!=pValue && fld.floorObjectData[cx,cy]!='d' && pValue!='d'){//Add special Case and add something to checkNext
+							RoomData rdtmp = getDataWithChar(fld.floorObjectData[cx,cy],fld,notConnected);
+							if(rdtmp.created){
+								notConnected.Remove(rdtmp);
+								checkNext.Add(rdtmp);
+								rdtmp.connected = true;
+								specialCases.Add(new RoomDataConnection(rdtmp,path[j],path[j-1]));
+							}else if(fld.floorObjectData[cx,cy]=='e'){
+								fld.floorObjectData[cx,cy]='h';
+								specialCases.Add(new RoomDataConnection(rdtmp,path[j],path[j-1]));
+							}
+						}
+						pValue = fld.floorObjectData[cx,cy];
+					}
+				}
 			}else{
 				allConnected = true;
 			}
@@ -639,7 +674,7 @@ public class BuildingGenerator : MonoBehaviour {
 		return locations;
 	}
 	//Adds the outer walls of the buildig. This includes Windows and such.
-	public void addOuterWalls(Vector2 floorDimensions, float height){
+	public void addOuterWalls(Vector2 floorDimensions, float height, bool needDoors){
 		int x = Mathf.RoundToInt(floorDimensions.x);
 		int y = Mathf.RoundToInt(floorDimensions.y);
 		height *= 2;
@@ -647,6 +682,7 @@ public class BuildingGenerator : MonoBehaviour {
 		int wallCount2 = 0;
 		int wallCount3 = 0;
 		int wallCount4 = 0;
+		int doorIndex = Mathf.RoundToInt(floorDimensions.x/2f);
 		for(int j = 0;j<x;j++){
 			for(int k = 0;k<y;k++){
 				//Check for outside cases and place things accordingly
@@ -668,6 +704,7 @@ public class BuildingGenerator : MonoBehaviour {
 						wallCount1++;
 						outerPart.transform.SetParent(buildingContainerObj.transform);
 					}
+					
 				}else if(j==x-1){
 					if(k==0){//add corner
 						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k), Quaternion.identity);
@@ -686,15 +723,17 @@ public class BuildingGenerator : MonoBehaviour {
 						outerPart.transform.SetParent(buildingContainerObj.transform);
 					}
 				}
-				if(k==0){
-					if(wallCount3>=2){
-						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
-						wallCount3 = 0;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
-					}else{
-						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
-						wallCount3++;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+				if(k==0){//This is the side of the building with the doors.
+					if(needDoors&&(doorIndex==k || doorIndex==k+1)){
+						if(wallCount3>=2){
+							outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
+							wallCount3 = 0;
+							outerPart.transform.SetParent(buildingContainerObj.transform);
+						}else{
+							outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
+							wallCount3++;
+							outerPart.transform.SetParent(buildingContainerObj.transform);
+						}
 					}
 				}else if(k==y-1){
 					if(wallCount4>=2){
