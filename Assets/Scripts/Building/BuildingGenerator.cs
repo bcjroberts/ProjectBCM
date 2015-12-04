@@ -60,7 +60,7 @@ public class BuildingGenerator : MonoBehaviour {
 				tmp2.transform.SetParent(buildingContainerObj.transform);
 			}
 			addHallways(fld);
-			addRooms(fld, new Vector2(-1,-1),-1);
+			addRooms(fld, new Vector2(10,10),-1);
 			instantiateRooms(fld);
 			previousLayout = fld;
 			fld.printObjectData();
@@ -698,7 +698,7 @@ public class BuildingGenerator : MonoBehaviour {
 		int wallCount2 = 0;
 		int wallCount3 = 0;
 		int wallCount4 = 0;
-		int doorIndex = Mathf.RoundToInt(floorDimensions.x/2f);
+		int doorIndex = Mathf.RoundToInt(floorDimensions.x/2);
 		for(int j = 0;j<x;j++){
 			for(int k = 0;k<y;k++){
 				//Check for outside cases and place things accordingly
@@ -740,8 +740,13 @@ public class BuildingGenerator : MonoBehaviour {
 					}
 				}
 				if(k==0){//This is the side of the building with the doors.
-					if(needDoors&&(doorIndex==k || doorIndex==k+1)){
+					if(needDoors&&(doorIndex==j || doorIndex==j+1)){
 						//Instantiate doors here
+						if(wallCount3>=2){
+							wallCount3 = 0;
+						}else{
+							wallCount3++;
+						}
 					}else{
 						if(wallCount3>=2){
 							outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
