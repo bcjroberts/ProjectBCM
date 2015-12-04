@@ -67,8 +67,12 @@ public class BuildingGenerator : MonoBehaviour {
 			//fld.printLayoutData();
 			constructLevel(++levelNum, baseHeight+=2);
 		}else{//Now make the outside of the building
-			for(int j = 0;j<=levelNum;j++)
-				addOuterWalls(floorDimensions, j, false);
+			for(int j = 0;j<=levelNum;j++){
+				if(j==0)
+					addOuterWalls(floorDimensions, j, true);
+				else
+					addOuterWalls(floorDimensions, j, false);
+			}
 		}
 		
 	}
@@ -157,7 +161,7 @@ public class BuildingGenerator : MonoBehaviour {
 				}
 			}
 		}
-		Debug.Log("Number of cases: " + specialCases.Count);
+		//Debug.Log("Number of cases: " + specialCases.Count);
 		foreach(RoomDataConnection rdc in specialCases){
 			int xdif = Mathf.RoundToInt(rdc.inRoom.x-rdc.outRoom.x); 
 			int ydif = Mathf.RoundToInt(rdc.inRoom.y-rdc.outRoom.y);
@@ -246,6 +250,8 @@ public class BuildingGenerator : MonoBehaviour {
 				createdRooms.Add(nData);
 				currentRooms++;
 				charValue++;
+				if(charValue==97)
+					charValue = 123;
 			}
 			if(xmax<2 || ymax <2)
 				done = true;
@@ -333,13 +339,13 @@ public class BuildingGenerator : MonoBehaviour {
 		}else{
 			allConnected = true;
 		}
-		int maxIter = 100;
+		int maxIter = fld.floorObjectData.GetLength(0)*fld.floorObjectData.GetLength(1)/5;
 		int cIter = 0;
 		//allConnected = true;
 		
 		//Attempts to connect all of the rooms to eachother
 		while (!allConnected && cIter<maxIter) {
-			
+			//Debug.Log("Not connected: " + notConnected.Count + " Checknext: " + checkNext.Count);
 			if(checkNext.Count>0){
 				List<RoomData> tempData = new List<RoomData>();
 				for(int j = 0;j<checkNext.Count;j++){
@@ -446,15 +452,20 @@ public class BuildingGenerator : MonoBehaviour {
 						if((fld.floorObjectData[cx,cy]=='e' || fld.floorObjectData[cx,cy]=='h') && (pValue=='d' || pValue=='h')){
 							fld.floorObjectData[cx,cy]='h';
 						}else if(fld.floorObjectData[cx,cy]!=pValue && fld.floorObjectData[cx,cy]!='d' && pValue!='d'){//Add special Case and add something to checkNext
-							RoomData rdtmp = getDataWithChar(fld.floorObjectData[cx,cy],fld,notConnected);
-							if(rdtmp.created){
-								notConnected.Remove(rdtmp);
-								checkNext.Add(rdtmp);
-								rdtmp.connected = true;
-								specialCases.Add(new RoomDataConnection(rdtmp,path[j],path[j-1]));
-							}else if(fld.floorObjectData[cx,cy]=='e'){
+							RoomData rdtmp = new RoomData();
+							if(fld.floorObjectData[cx,cy]=='e'){//Next tile is empty, so previous room does not matter
 								fld.floorObjectData[cx,cy]='h';
 								specialCases.Add(new RoomDataConnection(rdtmp,path[j],path[j-1]));
+							}else{
+								rdtmp = getDataWithChar(fld.floorObjectData[cx,cy],fld,notConnected);
+								if(rdtmp.created){//Found a room that is not connected, add it
+									notConnected.Remove(rdtmp);
+									checkNext.Add(rdtmp);
+									rdtmp.connected = true;
+									specialCases.Add(new RoomDataConnection(rdtmp,path[j],path[j-1]));
+								}else{//Did not find a room, so room must already be connected
+									specialCases.Add(new RoomDataConnection(rdtmp,path[j],path[j-1]));
+								}
 							}
 						}
 						pValue = fld.floorObjectData[cx,cy];
@@ -465,9 +476,14 @@ public class BuildingGenerator : MonoBehaviour {
 			}
 			cIter++;
 		}
-		if(cIter==maxIter)
-			Debug.Log("WARNING: REACHED MAXIMUM ITERATIONS!!!");
+		if (cIter == maxIter) {
+			Debug.Log ("WARNING: REACHED MAXIMUM ITERATIONS!!!");
+			foreach (RoomData r in notConnected) {
+				Debug.Log(fld.floorObjectData[Mathf.RoundToInt(r.position.x),Mathf.RoundToInt(r.position.y)]);
+			}
+		}
 		//Debug.Log (specialCases.Count);
+
 	}
 	//returna roomData with the same character that is passed in
 	private RoomData getDataWithChar(char value, FloorLayoutData fld, List<RoomData> rooms){
@@ -725,6 +741,8 @@ public class BuildingGenerator : MonoBehaviour {
 				}
 				if(k==0){//This is the side of the building with the doors.
 					if(needDoors&&(doorIndex==k || doorIndex==k+1)){
+						//Instantiate doors here
+					}else{
 						if(wallCount3>=2){
 							outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
 							wallCount3 = 0;
