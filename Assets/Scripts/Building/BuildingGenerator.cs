@@ -8,32 +8,65 @@ public class BuildingGenerator : MonoBehaviour {
 	public int numberOfFloors;
 	public Vector2 floorDimensions;
 	public GameObject buildingContainerObj;
+	private GameObject currentFloorContainer;
 	
 	private List<FloorLayoutData> floorInformation = new List<FloorLayoutData>(); 
 	private List<RoomDataConnection> specialCases = new List<RoomDataConnection> ();
+    private List<GameObject> floors = new List<GameObject>();
 	private FloorLayoutData previousLayout;
 	private int currentLevel = 0;
+    private int playerLocationByFloor = 0;
+    private int previousPlayerLocation = 0;
 	// Use this for initialization 
 	void Start () {
 		UnityEngine.Random.seed = 101;
 		constructBase();
 		
+
+        //Now we can disable all of the not needed floors
+        for(int j = numberOfFloors - 2; j > 3; j--) {
+            floors[j].SetActive(false);
+        }
+        Debug.Log(floors.Count);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
+        playerLocationByFloor = PlayerData.level-1;
+        Debug.Log(playerLocationByFloor);
+        //If the player reaches a new floor, rerender the floors.
+        if (playerLocationByFloor != previousPlayerLocation) { 
+        
+            if (playerLocationByFloor-previousPlayerLocation==-1 && playerLocationByFloor-2>0) {
+                floors[playerLocationByFloor - 2].SetActive(true);
+                if (playerLocationByFloor + 3 < numberOfFloors) {
+                    floors[playerLocationByFloor + 3].SetActive(false);
+                }
+            }else if (playerLocationByFloor-previousPlayerLocation==1 && playerLocationByFloor+3<numberOfFloors) {
+                floors[playerLocationByFloor + 3].SetActive(true);
+                if (playerLocationByFloor - 2 > 0) {
+                    floors[playerLocationByFloor - 2].SetActive(false);
+                }
+            }
+
+
+            previousPlayerLocation = playerLocationByFloor;
+        }
+
 	}
 	
 	
 	//constructs the base of the building. Checks to see which size is the best fit
 	private void constructBase(){
 		FloorLayoutData fld = new FloorLayoutData(floorDimensions);
-		floorInformation.Add(fld);
+        currentFloorContainer = (GameObject)Instantiate(Resources.Load("FloorContainer"), new Vector3(), Quaternion.identity);
+        floors.Add(currentFloorContainer);
+        floorInformation.Add(fld);
 		fillFloorSpace(fld);
 		Vector3 instPos = findPartLocationWithInfluence(new Vector2(1,3),new Vector2(1,1), new Vector2(0,-1), new Vector2(0,3), fld, 's', 'd');
 		GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
-		tmp.transform.SetParent(buildingContainerObj.transform);
+        currentFloorContainer.transform.SetParent(buildingContainerObj.transform);
+		tmp.transform.SetParent(currentFloorContainer.transform);
 		
 		previousLayout = fld;
 		constructLevel(currentLevel, 2f);
@@ -44,23 +77,25 @@ public class BuildingGenerator : MonoBehaviour {
 		
 		if (levelNum < numberOfFloors) {
 			FloorLayoutData fld = new FloorLayoutData(floorDimensions,previousLayout.floorInfluenceData);
-			fld.height = baseHeight;
+            currentFloorContainer = (GameObject)Instantiate(Resources.Load("FloorContainer"), new Vector3(), Quaternion.identity);
+            floors.Add(currentFloorContainer);
+            fld.height = baseHeight;
 			//previousLayout.printInfluenceData();
 			//fld.printBaseData();
 			fillFloorSpace(fld);
 			floorInformation.Add(fld);
-			
-			//ensures no objects are created on the roof, and that it is empty. 
-			if(levelNum!=numberOfFloors-1){
+            currentFloorContainer.transform.SetParent(buildingContainerObj.transform);
+            //ensures no objects are created on the roof, and that it is empty. 
+            if (levelNum!=numberOfFloors-1){
 				Vector3 instPos = findPartLocationWithInfluence(new Vector2(1,3),new Vector2(1,1), new Vector2(0,-1), new Vector2(0,3), fld, 's', 'd');
 				GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
-				tmp.transform.SetParent(buildingContainerObj.transform); 
-				Vector3 instPos2 = findPartLocationWithInfluence(new Vector2(1,3),new Vector2(1,1), new Vector2(0,-1), new Vector2(0,3), fld, 's', 'd');
+                tmp.transform.SetParent(currentFloorContainer.transform);
+                Vector3 instPos2 = findPartLocationWithInfluence(new Vector2(1,3),new Vector2(1,1), new Vector2(0,-1), new Vector2(0,3), fld, 's', 'd');
 				GameObject tmp2 = (GameObject)Instantiate(Resources.Load("Stair1"),instPos2,Quaternion.identity);
-				tmp2.transform.SetParent(buildingContainerObj.transform);
-			}
+                tmp2.transform.SetParent(currentFloorContainer.transform);
+            }
 			addHallways(fld);
-			addRooms(fld, new Vector2(10,10),-1);
+			addRooms(fld, new Vector2(-1,-1), new Vector2(10,10),-1);
 			instantiateRooms(fld);
 			previousLayout = fld;
 			fld.printObjectData();
@@ -118,7 +153,7 @@ public class BuildingGenerator : MonoBehaviour {
 				string name = maxDimension+"x"+maxDimension+"tile";
 				float offset = maxDimension/2f;
 				GameObject tmp = (GameObject)Instantiate(Resources.Load(name),new Vector3(startPos.x+offset,floor.height,startPos.y+offset),Quaternion.identity);
-				tmp.transform.SetParent(buildingContainerObj.transform);
+                tmp.transform.SetParent(currentFloorContainer.transform);
 				//floor.height+=0.1f;
 				floor.fillLayoutData(startPos,maxDimension);
 			}
@@ -137,7 +172,7 @@ public class BuildingGenerator : MonoBehaviour {
 				//If the object is not a stair, hall or door
 				if(!chars.Contains(currentChar)){
 					GameObject rSegment = (GameObject)Instantiate(Resources.Load("WallSegment"),new Vector3(j+0.5f,floor.height,k+0.5f),Quaternion.identity);
-					rSegment.transform.SetParent(buildingContainerObj.transform);
+					rSegment.transform.SetParent(currentFloorContainer.transform);
 					RoomSegment cSeg = rSegment.GetComponent<RoomSegment>();
 					bool w1 = false;
 					bool w2 = false;
@@ -198,13 +233,15 @@ public class BuildingGenerator : MonoBehaviour {
 		}
 	}
 	//Call this method to add rooms to the structure
-	private void addRooms(FloorLayoutData floor, Vector2 startingDimensions, int maxRooms){
+	private void addRooms(FloorLayoutData floor, Vector2 minimumDimensions, Vector2 startingDimensions, int maxRooms){
 
 		bool done = false;
 		bool resetMod = false;
 		int charValue = 65;
 		int xmax = 0;
 		int ymax = 0;
+        int xmin = 0;
+        int ymin = 0;
 		if(startingDimensions.x==-1){
 			xmax = floor.floorObjectData.GetLength (0) / 2;
 			ymax = floor.floorObjectData.GetLength (1) / 2;
@@ -212,7 +249,16 @@ public class BuildingGenerator : MonoBehaviour {
 			xmax = Mathf.RoundToInt(startingDimensions.x);
 			ymax = Mathf.RoundToInt(startingDimensions.y);
 		}
-		int modV = -1;
+        if (minimumDimensions.x == -1)
+        {
+            xmin = 2;
+            ymin = 2;
+        }
+        else {
+            xmax = Mathf.RoundToInt(minimumDimensions.x);
+            ymax = Mathf.RoundToInt(minimumDimensions.y);
+        }
+        int modV = -1;
 		List<RoomData> createdRooms = new List<RoomData> ();
 		
 		int currentRooms = 0;
@@ -220,8 +266,8 @@ public class BuildingGenerator : MonoBehaviour {
 			currentRooms = -1000;
 			
 		while (!done && currentRooms<maxRooms) {
-			int cx = UnityEngine.Random.Range(2,xmax);
-			int cy = UnityEngine.Random.Range(2, ymax);
+			int cx = UnityEngine.Random.Range(xmin,xmax);
+			int cy = UnityEngine.Random.Range(ymin, ymax);
 			RoomData nData = findRoomLocation(new Vector2(cx,cy),floor,Convert.ToChar(charValue));
 			bool result = nData.created;
 			//if a room was not found, decrement the dimensions randomely and look again
@@ -706,37 +752,37 @@ public class BuildingGenerator : MonoBehaviour {
 				if(j==0){
 					if(k==0){//add corner
 						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k), Quaternion.identity);
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}else if(k==y-1){//add corner
 						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j,height+1f,k+1), Quaternion.identity);
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}
 					if(wallCount1>=2){
 						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
 						wallCount1 = 0;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}else{
 						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j,height+1,k+0.5f),Quaternion.identity);
 						wallCount1++;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}
 					
 				}else if(j==x-1){
 					if(k==0){//add corner
 						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k), Quaternion.identity);
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}else if(k==y-1){//add corner
 						outerPart = (GameObject)Instantiate(Resources.Load("Corner1"),new Vector3(j+1,height+1f,k+1), Quaternion.identity);
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}
 					if(wallCount2>=2){
 						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+1f,height+1,k+0.5f),new Quaternion(0,1,0,0));
 						wallCount2 = 0;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}else{
 						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+1f,height+1,k+0.5f),new Quaternion(0,1,0,0));
 						wallCount2++;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}
 				}
 				if(k==0){//This is the side of the building with the doors.
@@ -751,22 +797,22 @@ public class BuildingGenerator : MonoBehaviour {
 						if(wallCount3>=2){
 							outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
 							wallCount3 = 0;
-							outerPart.transform.SetParent(buildingContainerObj.transform);
+							outerPart.transform.SetParent(currentFloorContainer.transform);
 						}else{
 							outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+0.5f,height+1,k),new Quaternion(0,0.7f,0,-0.7f));
 							wallCount3++;
-							outerPart.transform.SetParent(buildingContainerObj.transform);
+							outerPart.transform.SetParent(currentFloorContainer.transform);
 						}
 					}
 				}else if(k==y-1){
 					if(wallCount4>=2){
 						outerPart = (GameObject)Instantiate(Resources.Load("WallWindow1"),new Vector3(j+0.5f,height+1,k+1),new Quaternion(0,0.7f,0,0.7f));
 						wallCount4 = 0;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}else{
 						outerPart = (GameObject)Instantiate(Resources.Load("Wall1"),new Vector3(j+0.5f,height+1,k+1),new Quaternion(0,0.7f,0,0.7f));
 						wallCount4++;
-						outerPart.transform.SetParent(buildingContainerObj.transform);
+						outerPart.transform.SetParent(currentFloorContainer.transform);
 					}
 				}
 			}
