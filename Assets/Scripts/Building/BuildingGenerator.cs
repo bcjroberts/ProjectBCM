@@ -80,7 +80,12 @@ public class BuildingGenerator : MonoBehaviour {
 		GameObject tmp = (GameObject)Instantiate(Resources.Load("Stair1"),instPos,Quaternion.identity);
         currentFloorContainer.transform.SetParent(buildingContainerObj.transform);
 		tmp.transform.SetParent(currentFloorContainer.transform);
-		
+        //Add main entrance to floor data
+        fld.editObjectData(new Vector2(0,fld.getDimention(0)/2-1),new Vector2(2,fld.getDimention(0)/2+1),'d');
+        addHallways(fld);
+        addRooms(fld, new Vector2(-1,-1), new Vector2(5,5), 5);
+        instantiateRooms(fld);
+        
 		previousLayout = fld;
 		constructLevel(currentLevel, 2f);
 	}
@@ -251,8 +256,11 @@ public class BuildingGenerator : MonoBehaviour {
 			}else{
 				Debug.Log("The current room data connection goes nowhere.");
 			}
+            Quaternion rot = Quaternion.identity;
+            if(rdc.inRoom.y!=rdc.outRoom.y)
+                rot.eulerAngles = new Vector3(0,90,0);
             //Can now instantiate a door in this location.
-            GameObject door = (GameObject)Instantiate(Resources.Load("Door1"),new Vector3((rdc.inRoom.x+rdc.outRoom.x)/2f+0.5f,floor.height,(rdc.inRoom.y+rdc.outRoom.y)/2f+0.5f),Quaternion.identity);
+            GameObject door = (GameObject)Instantiate(Resources.Load("Door1"),new Vector3((rdc.inRoom.x+rdc.outRoom.x)/2f+0.5f,floor.height,(rdc.inRoom.y+rdc.outRoom.y)/2f+0.5f),rot);
 		}
 	}
 	//Call this method to add rooms to the structure

@@ -13,11 +13,11 @@ public class BulletHoleManager : MonoBehaviour {
 	void Start () {
 		instance = this;
 	}
-	
+	//Instantiates a bullet hole, and removes extra if there are more than 100 holes.
 	public void addBulletHole(RaycastHit hitInfo){
 		GameObject b =  (GameObject)Instantiate(bulletHoles[UnityEngine.Random.Range(0,bulletHoles.Length)],hitInfo.point+hitInfo.normal*0.01f,Quaternion.FromToRotation(Vector3.back,hitInfo.normal));
 		currentHoles.AddLast(b);
-		b.transform.SetParent(transform);
+		b.transform.SetParent(hitInfo.transform);
 		if(currentHoles.Count>maxBulletHoles){
 			GameObject bd = currentHoles.First.Value;
 			currentHoles.RemoveFirst();
