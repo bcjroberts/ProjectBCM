@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using System;
 
@@ -17,6 +18,10 @@ public class BuildingGenerator : MonoBehaviour {
 	private int currentLevel = 0;
     private int playerLocationByFloor = 0;
     private int previousPlayerLocation = 0;
+    private int floorsAbove = 3;
+    private int floorsBelow = 3;
+
+    public Boolean updateRender = true;
 	// Use this for initialization 
 	void Start () {
 		UnityEngine.Random.seed = 101;
@@ -24,37 +29,45 @@ public class BuildingGenerator : MonoBehaviour {
 		
 
         //Now we can disable all of the not needed floors
-        for(int j = numberOfFloors - 2; j > 3; j--) {
+        for(int j = numberOfFloors - 2; j > floorsAbove; j--) {
             floors[j].SetActive(false);
         }
-        Debug.Log(floors.Count);
-	}
+        //Debug.Log(floors.Count);
+        StartCoroutine("renderFloors");
+    }
 	
 	// Update is called once per frame
 	void Update () {
-        playerLocationByFloor = PlayerData.level-1;
-        Debug.Log(playerLocationByFloor);
-        //If the player reaches a new floor, rerender the floors.
-        if (playerLocationByFloor != previousPlayerLocation) { 
-        
-            if (playerLocationByFloor-previousPlayerLocation==-1 && playerLocationByFloor-2>0) {
-                floors[playerLocationByFloor - 2].SetActive(true);
-                if (playerLocationByFloor + 3 < numberOfFloors) {
-                    floors[playerLocationByFloor + 3].SetActive(false);
-                }
-            }else if (playerLocationByFloor-previousPlayerLocation==1 && playerLocationByFloor+3<numberOfFloors) {
-                floors[playerLocationByFloor + 3].SetActive(true);
-                if (playerLocationByFloor - 2 > 0) {
-                    floors[playerLocationByFloor - 2].SetActive(false);
-                }
-            }
-
-
-            previousPlayerLocation = playerLocationByFloor;
-        }
+       
 
 	}
-	
+    //This coroutine is used for checking render calls
+	IEnumerator renderFloors() {
+        while (updateRender) {
+            playerLocationByFloor = PlayerData.level;
+
+            //If the player reaches a new floor, rerender the floors.
+            if (playerLocationByFloor != previousPlayerLocation) {
+                //If a player goes down a floor
+                if (playerLocationByFloor - previousPlayerLocation == -1 && playerLocationByFloor - floorsBelow > 0) {
+                    floors[playerLocationByFloor - floorsBelow].SetActive(true);
+                    if (playerLocationByFloor + floorsAbove < numberOfFloors) {//Derender above levels
+                        floors[playerLocationByFloor + floorsAbove].SetActive(false);
+                    }
+                }//If a player goes up a floor
+                else if (playerLocationByFloor - previousPlayerLocation == 1 && playerLocationByFloor + floorsAbove < numberOfFloors) {
+                    floors[playerLocationByFloor + floorsAbove].SetActive(true);
+                    if (playerLocationByFloor - floorsBelow > 0) {//Derender low levels
+                        floors[playerLocationByFloor - floorsBelow].SetActive(false);
+                    }
+                }
+                previousPlayerLocation = playerLocationByFloor;
+            }
+            //Pause, do not need to call this each frame
+            yield return new WaitForSeconds(0.1f);
+            //Debug.Log(playerLocationByFloor);
+        }
+    }
 	
 	//constructs the base of the building. Checks to see which size is the best fit
 	private void constructBase(){
@@ -98,7 +111,7 @@ public class BuildingGenerator : MonoBehaviour {
 			addRooms(fld, new Vector2(-1,-1), new Vector2(10,10),-1);
 			instantiateRooms(fld);
 			previousLayout = fld;
-			fld.printObjectData();
+			//fld.printObjectData();
 			//fld.printLayoutData();
 			constructLevel(++levelNum, baseHeight+=2);
 		}else{//Now make the outside of the building
@@ -164,6 +177,7 @@ public class BuildingGenerator : MonoBehaviour {
 	private void instantiateRooms(FloorLayoutData floor){
 		
 		List<char> chars = new List<char>{'s','h','d','e'};
+        
 		//Debug.Log("Called");
 		for (int j = 0; j<floor.floorObjectData.GetLength(0); j++) {
 			for(int k = 0;k<floor.floorObjectData.GetLength(1);k++){
@@ -190,10 +204,18 @@ public class BuildingGenerator : MonoBehaviour {
 					if(!inBounds(floor,new Vector2(j,k+1)) || floor.floorObjectData[j,k+1]==currentChar || floor.floorObjectData[j,k+1]=='d'){
 						w2 = true;
 					}
-					
+                    //Now we can check up and left to see if those positions are in bounds and need to be changed
+                    if (!w3 && inBounds(floor, new Vector2(j - 1, k)) && floor.getRoomSegment(j - 1,k) != null) {
+                        floor.getRoomSegment(j - 1, k).setupSegments(true, false, false, false);
+                        
+                    }
+                    if(!w4 && inBounds(floor, new Vector2(j, k - 1)) && floor.getRoomSegment(j, k - 1) != null) {
+                        floor.getRoomSegment(j, k - 1).setupSegments(false, true, false, false);
+                        
+                    }
 					cSeg.setupSegments(w1,w2,w3,w4);
 					floor.addRoomSegment(cSeg, j, k);
-				}
+                }
 			}
 		}
 		//Debug.Log("Number of cases: " + specialCases.Count);
@@ -229,7 +251,8 @@ public class BuildingGenerator : MonoBehaviour {
 			}else{
 				Debug.Log("The current room data connection goes nowhere.");
 			}
-		
+            //Can now instantiate a door in this location.
+            GameObject door = (GameObject)Instantiate(Resources.Load("Door1"),new Vector3((rdc.inRoom.x+rdc.outRoom.x)/2f+0.5f,floor.height,(rdc.inRoom.y+rdc.outRoom.y)/2f+0.5f),Quaternion.identity);
 		}
 	}
 	//Call this method to add rooms to the structure
