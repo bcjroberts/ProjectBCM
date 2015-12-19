@@ -6,6 +6,7 @@ public class PlayerMotor : MonoBehaviour {
 	private Rigidbody myRigidbody;
 	
 	private Vector3 myVelocity = new Vector3();
+    private Vector3 lastPos = new Vector3();
 	private Vector3 rotation = new Vector3();
 	// Use this for initialization
 	void Start () {
@@ -28,20 +29,25 @@ public class PlayerMotor : MonoBehaviour {
 	}
 	// Update is called once per tick
 	void FixedUpdate () {
-		
-		if(Input.GetKey(KeyCode.LeftControl)){
-			myRigidbody.constraints = RigidbodyConstraints.FreezeAll;	
+
+        //Performes player movement taking collisions into account
+        if (myVelocity != Vector3.zero){
+            myRigidbody.constraints = RigidbodyConstraints.None | RigidbodyConstraints.FreezeRotation;
+            myRigidbody.MovePosition(myRigidbody.position + myVelocity*Time.fixedDeltaTime);
+            
+            if (Vector3.Distance(transform.position,lastPos)<0.045f){
+                myVelocity = Vector3.zero;
+            }
 		}else{
-			myRigidbody.constraints = RigidbodyConstraints.None | RigidbodyConstraints.FreezeRotation;
-		}
-		
-		//Performes player movement taking collisions into account
-		if(myVelocity != Vector3.zero){
-			myRigidbody.MovePosition(myRigidbody.position + myVelocity*Time.deltaTime);
-		}else{
-			myRigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
+            if (Physics.Raycast(transform.position, -transform.up, 0.575f)) {
+                myRigidbody.constraints = RigidbodyConstraints.FreezePositionX | RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
+            }
+            else {
+                myRigidbody.constraints = RigidbodyConstraints.None | RigidbodyConstraints.FreezeRotation;
+            }
 		}
 		//performes player rotation	
 		myRigidbody.MoveRotation(myRigidbody.rotation * Quaternion.Euler(rotation));
-	}
+        lastPos = transform.position;
+    }
 }

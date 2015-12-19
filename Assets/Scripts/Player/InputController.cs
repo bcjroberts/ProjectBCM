@@ -82,15 +82,24 @@ public class InputController : MonoBehaviour {
             performAction = true;
         }
         //How to interact with objects
-        Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward*1.5f);
         RaycastHit hitInfo;
         if(Physics.Raycast(Camera.main.transform.position,Camera.main.transform.forward, out hitInfo, 1.5f)) {
             GameObject obj = hitInfo.transform.gameObject;
-            if (obj.GetComponentInParent<ObjectActionsInterface>()!=null && performAction) {
-                obj.GetComponentInParent<ObjectActionsInterface>().doAction();
-            }else if (obj.GetComponent<ObjectActionsInterface>()!=null && performAction) {
-                obj.GetComponent<ObjectActionsInterface>().doAction();
+            if (obj.GetComponentInParent<ObjectActionsInterface>()!=null) {
+                UIManager.instance.describeAction(obj.GetComponentInParent<ObjectActionsInterface>().getAction());
+                if(performAction)
+                    obj.GetComponentInParent<ObjectActionsInterface>().doAction();
+            }else if (obj.GetComponent<ObjectActionsInterface>()!=null) {
+                UIManager.instance.describeAction(obj.GetComponent<ObjectActionsInterface>().getAction());
+                if(performAction)
+                    obj.GetComponent<ObjectActionsInterface>().doAction();
             }
+            else {
+                UIManager.instance.describeAction("");
+            }
+        }
+        else {
+            UIManager.instance.describeAction("");
         }
 	}
 }
